@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using NDesk.DBus;
 using org.freedesktop.DBus;
 
-public class ManagedDBusTest
+public class Monitor
 {
 	public static void Main (string[] args)
 	{
@@ -71,11 +71,16 @@ public class ManagedDBusTest
 	public static void PrintMessage (Message msg)
 	{
 		Console.WriteLine ("Message:");
+		//Console.WriteLine ("\t" + "Endianness: " + msg.Header.Endianness);
 		Console.WriteLine ("\t" + "Type: " + msg.Header.MessageType);
+		Console.WriteLine ("\t" + "Flags: " + msg.Header.Flags);
+		//Console.WriteLine ("\t" + "MajorVersion: " + msg.Header.MajorVersion);
+		Console.WriteLine ("\t" + "Serial: " + msg.Header.Serial);
 		//foreach (HeaderField hf in msg.HeaderFields)
 		//	Console.WriteLine ("\t" + hf.Code + ": " + hf.Value);
+		Console.WriteLine ("\tHeader Fields:");
 		foreach (KeyValuePair<FieldCode,object> field in msg.Header.Fields)
-			Console.WriteLine ("\t" + field.Key + ": " + field.Value);
+			Console.WriteLine ("\t\t" + field.Key + ": " + field.Value);
 
 		if (msg.Body != null) {
 			Console.WriteLine ("\tBody:");
