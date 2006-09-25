@@ -48,6 +48,7 @@ public class ManagedDBusTestExport
 		//end ugly bits
 
 		demo.Say ("Hello world!");
+		demo.Say ("Sibérie");
 		Console.WriteLine (demo.EchoCaps ("foo bar"));
 		Console.WriteLine (demo.GetEnum ());
 		demo.CheckEnum (DemoEnum.Bar);
