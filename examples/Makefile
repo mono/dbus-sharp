@@ -20,7 +20,7 @@ test-notifications.exe: NDesk.DBus.dll Notifications.cs TestNotifications.cs
 
 run:
 	echo '#!/bin/sh' > $@
-	echo 'MONO_PATH=$(DBUS_SHARP_PREFIX)/src:$$MONO_PATH' >> $@
+	echo 'export MONO_PATH=$(DBUS_SHARP_PREFIX)/src:$$MONO_PATH' >> $@
 	echo '$(RUNTIME) $$@' >> $@
 	chmod +x $@
 

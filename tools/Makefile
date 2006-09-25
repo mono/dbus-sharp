@@ -10,7 +10,7 @@ introspect.exe: NDesk.DBus.dll Introspect.cs IntrospectionSchema.cs
 
 monitor: monitor.exe
 	echo '#!/bin/sh' > $@
-	echo 'MONO_PATH=$(DBUS_SHARP_PREFIX)/src:$$MONO_PATH' >> $@
+	echo 'export MONO_PATH=$(DBUS_SHARP_PREFIX)/src:$$MONO_PATH' >> $@
 	echo '$(RUNTIME) $^ $$@' >> $@
 	chmod +x $@
 
