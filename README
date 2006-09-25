@@ -1,8 +1,8 @@
 D-Bus for .NET
 ==============
 
-This is a C# implementation of D-Bus, the small message bus with a big
-appetite.
+This is a C# implementation of D-Bus. It's often referred to as "managed
+D-Bus" to avoid confusion with existing bindings (which wrap libdbus).
 
 See http://www.ndesk.org/DBusSharp
 
@@ -13,8 +13,8 @@ one another in a peer-to-peer configuration.
 See http://www.freedesktop.org/wiki/Software/dbus for general
 information on the D-Bus IPC mechanism.
 
-This software is currently at an early stage of development and IS NOT
-EXPECTED TO WORK YET.
+This software is currently at an early stage of development and not
+recommended for use in stable applications.
 
 However it is hoped that it will soon provide a tested, high-performance
 bridge to and from all systems that are exposed via D-Bus, regardless of
