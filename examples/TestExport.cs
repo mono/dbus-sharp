@@ -92,6 +92,15 @@ public class ManagedDBusTestExport
 		demo.FireOffSomeEvent ();
 		//handle the raised signal
 		conn.Iterate ();
+
+		/*
+		Console.WriteLine ();
+		{
+			object tmp = demo.GetArrayOfInts ();
+			int[] arr = (int[])tmp;
+			Console.WriteLine ("Array of ints as variant: " + arr[0] + " " + arr[1]);
+		}
+		*/
 	}
 }
 
@@ -215,6 +224,15 @@ public class DemoObject : MarshalByRefObject
 			SomeEvent ("some string", 21, 19.84, mt);
 			Console.WriteLine ("Fired off SomeEvent");
 		}
+	}
+
+	public object GetArrayOfInts ()
+	{
+		int[] arr = new int[2];
+		arr[0] = 21;
+		arr[1] = 22;
+
+		return arr;
 	}
 }
 
