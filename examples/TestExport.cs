@@ -54,6 +54,14 @@ public class ManagedDBusTestExport
 		demo.CheckEnum (DemoEnum.Bar);
 		demo.CheckEnum (demo.GetEnum ());
 
+		Console.WriteLine ();
+		long someLong = demo.GetSomeLong ();
+		Console.WriteLine ("someLong: " + someLong);
+
+		Console.WriteLine ();
+		ulong someULong = demo.GetSomeULong ();
+		Console.WriteLine ("someULong: " + someULong);
+
 		/*
 		Console.WriteLine ();
 		string outVal;
@@ -115,6 +123,16 @@ public class DemoObject : MarshalByRefObject
 	public string EchoCaps (string text)
 	{
 		return text.ToUpper ();
+	}
+
+	public long GetSomeLong ()
+	{
+		return Int64.MaxValue;
+	}
+
+	public ulong GetSomeULong ()
+	{
+		return UInt64.MaxValue;
 	}
 
 	public void CheckEnum (DemoEnum e)
