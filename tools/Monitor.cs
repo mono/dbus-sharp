@@ -88,7 +88,7 @@ public class Monitor
 
 			//TODO: this needs to be done more intelligently
 			try {
-				foreach (DType dtype in msg.Signature.Data) {
+				foreach (DType dtype in msg.Signature.GetBuffer ()) {
 					if (dtype == DType.Invalid)
 						continue;
 					object arg;
