@@ -38,8 +38,8 @@ public class TestServer
 		string myNameReq = "org.ndesk.test";
 
 		if (!isServer) {
-			conn = new Connection (false);
-			conn.Open (addr);
+			conn = new Connection ();
+			conn.OpenPrivate (addr);
 			DemoObject demo = conn.GetObject<DemoObject> (myNameReq, myOpath);
 			//float ret = demo.Hello ("hi from test client", 21);
 			float ret = 200;
@@ -70,7 +70,7 @@ public class TestServer
 				PeerCred pc = new PeerCred (client);
 				Console.WriteLine ("PeerCred: pid={0}, uid={1}, gid={2}", pc.ProcessID, pc.UserID, pc.GroupID);
 
-				conn = new Connection (false);
+				conn = new Connection ();
 				conn.ns = new NetworkStream (client);
 				conn.SocketHandle = (long)client.Handle;
 

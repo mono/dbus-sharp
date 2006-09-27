@@ -11,7 +11,7 @@ public class ManagedDBusTestExceptions
 {
 	public static void Main ()
 	{
-		Connection conn = new Connection ();
+		Connection conn = Connection.Open (Address.SessionBus);
 
 		//begin ugly bits
 		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");

@@ -31,9 +31,7 @@ public class Monitor
 			}
 		}
 
-		Connection conn = new Connection (false);
-		conn.Open (addr);
-		conn.Authenticate ();
+		Connection conn = Connection.Open (addr);
 
 		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
 		string name = "org.freedesktop.DBus";

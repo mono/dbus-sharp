@@ -11,7 +11,7 @@ public class ManagedDBusTestSample
 {
 	public static void Main ()
 	{
-		Connection conn = new Connection ();
+		Connection conn = Connection.Open (Address.SessionBus);
 
 		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
 		string name = "org.freedesktop.DBus";
