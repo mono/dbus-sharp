@@ -40,7 +40,7 @@ public class ManagedDBusTestExceptions
 			Console.WriteLine ("nameReply: " + nameReply);
 
 			demo = new DemoObject ();
-			conn.Marshal (demo, myNameReq, myOpath);
+			conn.Register (myNameReq, myOpath, demo);
 
 			while (true)
 				conn.Iterate ();

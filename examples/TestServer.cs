@@ -106,7 +106,7 @@ public class ConnectionHandler
 		ObjectPath myOpath = new ObjectPath ("/org/ndesk/test");
 
 		DemoObject demo = new DemoObject ();
-		conn.Marshal (demo, myNameReq, myOpath);
+		conn.Register (myNameReq, myOpath, demo);
 
 		//TODO: handle lost connections etc. properly instead of stupido try/catch
 		try {
@@ -116,7 +116,7 @@ public class ConnectionHandler
 			//Console.Error.WriteLine (e);
 		}
 
-		conn.Unmarshal (myNameReq, myOpath);
+		conn.Unregister (myNameReq, myOpath);
 	}
 }
 
