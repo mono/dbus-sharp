@@ -57,16 +57,20 @@ public class ManagedDBusTestExceptions
 
 		//TODO: make this work as expected (what is expected?)
 		Console.WriteLine ();
+		try {
 		demo.ThrowSomeException ();
+		} catch (Exception e) {
+			Console.WriteLine (e);
+		}
 		//handle the thrown exception
-		conn.Iterate ();
+		//conn.Iterate ();
 	}
 }
 
 [Interface ("org.ndesk.testexceptions")]
 public class DemoObject : MarshalByRefObject
 {
-	public void ThrowSomeException ()
+	public int ThrowSomeException ()
 	{
 		Console.WriteLine ("Asked to throw some Exception");
 
