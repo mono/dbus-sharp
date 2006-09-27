@@ -107,6 +107,12 @@ public class ManagedDBusTestExport
 			int[] arr = (int[])tmp;
 			Console.WriteLine ("Array of ints as variant: " + arr[0] + " " + arr[1]);
 		}
+
+		Console.WriteLine ();
+		{
+			demo.UseSomeVariant ("hello");
+			demo.UseSomeVariant (21);
+		}
 	}
 }
 
@@ -249,6 +255,11 @@ public class DemoObject : MarshalByRefObject
 		arr[1] = 22;
 
 		return arr;
+	}
+
+	public void UseSomeVariant (object value)
+	{
+		Console.WriteLine ("variant value: " + value);
 	}
 }
 
