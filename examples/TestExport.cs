@@ -96,7 +96,7 @@ public class ManagedDBusTestExport
 			Console.WriteLine (kvp.Key + ": " + kvp.Value);
 
 		Console.WriteLine ();
-		demo.SomeEvent += delegate (string arg1, int arg2, double arg3, MyTuple mt) {Console.WriteLine ("SomeEvent handler: " + arg1 + ", " + arg2 + ", " + arg3 + ", " + mt.A + ", " + mt.B);};
+		demo.SomeEvent += delegate (string arg1, object arg2, double arg3, MyTuple mt) {Console.WriteLine ("SomeEvent handler: " + arg1 + ", " + arg2 + ", " + arg3 + ", " + mt.A + ", " + mt.B);};
 		demo.FireOffSomeEvent ();
 		//handle the raised signal
 		conn.Iterate ();
@@ -276,4 +276,4 @@ public struct MyTuple
 	public string B;
 }
 
-public delegate void SomeEventHandler (string arg1, int arg2, double arg3, MyTuple mt);
+public delegate void SomeEventHandler (string arg1, object arg2, double arg3, MyTuple mt);
