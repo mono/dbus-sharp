@@ -101,14 +101,12 @@ public class ManagedDBusTestExport
 		//handle the raised signal
 		conn.Iterate ();
 
-		/*
 		Console.WriteLine ();
 		{
 			object tmp = demo.GetArrayOfInts ();
 			int[] arr = (int[])tmp;
 			Console.WriteLine ("Array of ints as variant: " + arr[0] + " " + arr[1]);
 		}
-		*/
 	}
 }
 
