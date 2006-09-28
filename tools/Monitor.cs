@@ -45,7 +45,7 @@ public class Monitor
 		bus.Hello ();
 
 		//hack to process the NameAcquired signal synchronously
-		conn.HandleSignal (conn.ReadMessage ());
+		conn.Iterate ();
 
 		if (args.Length > 1) {
 			//install custom match rules only
