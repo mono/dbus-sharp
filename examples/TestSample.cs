@@ -11,21 +11,9 @@ public class ManagedDBusTestSample
 {
 	public static void Main ()
 	{
-		Connection conn = Connection.Open (Address.SessionBus);
+		Bus bus = Bus.SessionBus;
 
-		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
-		string name = "org.freedesktop.DBus";
-
-		Bus bus = conn.GetObject<Bus> (name, opath);
-
-		bus.NameAcquired += delegate (string acquired_name) {
-			Console.WriteLine ("NameAcquired: " + acquired_name);
-		};
-
-		string myName = bus.Hello ();
-		Console.WriteLine ("myName: " + myName);
-
-		SampleInterface sample = conn.GetObject<SampleInterface> ("org.designfu.SampleService", new ObjectPath ("/SomeObject"));
+		SampleInterface sample = bus.GetObject<SampleInterface> ("org.designfu.SampleService", new ObjectPath ("/SomeObject"));
 
 		Console.WriteLine ();
 		string xmlData = sample.Introspect ();

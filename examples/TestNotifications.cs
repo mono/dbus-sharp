@@ -15,21 +15,9 @@ public class ManagedDBusTestNotifications
 {
 	public static void Main ()
 	{
-		Connection conn = Connection.Open (Address.SessionBus);
+		Bus bus = Bus.SessionBus;
 
-		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
-		string name = "org.freedesktop.DBus";
-
-		Bus bus = conn.GetObject<Bus> (name, opath);
-
-		bus.NameAcquired += delegate (string acquired_name) {
-			Console.WriteLine ("NameAcquired: " + acquired_name);
-		};
-
-		string myName = bus.Hello ();
-		Console.WriteLine ("myName: " + myName);
-
-		Notifications nf = conn.GetObject<Notifications> ("org.freedesktop.Notifications", new ObjectPath ("/org/freedesktop/Notifications"));
+		Notifications nf = bus.GetObject<Notifications> ("org.freedesktop.Notifications", new ObjectPath ("/org/freedesktop/Notifications"));
 
 		Console.WriteLine ();
 		Console.WriteLine ("Capabilities:");

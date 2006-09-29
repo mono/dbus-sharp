@@ -11,21 +11,7 @@ public class ManagedDBusTestExport
 {
 	public static void Main ()
 	{
-		Connection conn = Connection.Open (Address.SessionBus);
-
-		//begin ugly bits
-		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
-		string name = "org.freedesktop.DBus";
-
-		Bus bus = conn.GetObject<Bus> (name, opath);
-
-		bus.NameAcquired += delegate (string acquired_name) {
-			Console.WriteLine ("NameAcquired: " + acquired_name);
-		};
-
-		string myName = bus.Hello ();
-		Console.WriteLine ("myName: " + myName);
-
+		Bus bus = Bus.SessionBus;
 
 		ObjectPath myOpath = new ObjectPath ("/org/ndesk/test");
 		string myNameReq = "org.ndesk.test";
@@ -33,17 +19,17 @@ public class ManagedDBusTestExport
 		DemoObject demo;
 
 		if (bus.NameHasOwner (myNameReq)) {
-			demo = conn.GetObject<DemoObject> (myNameReq, myOpath);
+			demo = bus.GetObject<DemoObject> (myNameReq, myOpath);
 		} else {
-			NameReply nameReply = bus.RequestName (myNameReq, NameFlag.None);
+			NameReply nameReply = bus.RequestName (myNameReq);
 
 			Console.WriteLine ("nameReply: " + nameReply);
 
 			demo = new DemoObject ();
-			conn.Register (myNameReq, myOpath, demo);
+			bus.Register (myNameReq, myOpath, demo);
 
 			while (true)
-				conn.Iterate ();
+				bus.Iterate ();
 		}
 		//end ugly bits
 
@@ -100,19 +86,19 @@ public class ManagedDBusTestExport
 		demo.SomeEvent += delegate (string arg1, object arg2, double arg3, MyTuple mt) {Console.WriteLine ("SomeEvent handler two: " + arg1 + ", " + arg2 + ", " + arg3 + ", " + mt.A + ", " + mt.B);};
 		demo.FireOffSomeEvent ();
 		//handle the raised signal
-		conn.Iterate ();
+		bus.Iterate ();
 
 		Console.WriteLine ();
 		demo.SomeEvent += HandleSomeEventA;
 		demo.FireOffSomeEvent ();
 		//handle the raised signal
-		conn.Iterate ();
+		bus.Iterate ();
 
 		Console.WriteLine ();
 		demo.SomeEvent -= HandleSomeEventA;
 		demo.FireOffSomeEvent ();
 		//handle the raised signal
-		conn.Iterate ();
+		bus.Iterate ();
 
 		Console.WriteLine ();
 		{

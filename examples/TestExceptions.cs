@@ -11,46 +11,31 @@ public class ManagedDBusTestExceptions
 {
 	public static void Main ()
 	{
-		Connection conn = Connection.Open (Address.SessionBus);
+		Bus bus = Bus.SessionBus;
 
-		//begin ugly bits
-		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
-		string name = "org.freedesktop.DBus";
-
-		Bus bus = conn.GetObject<Bus> (name, opath);
-
-		bus.NameAcquired += delegate (string acquired_name) {
-			Console.WriteLine ("NameAcquired: " + acquired_name);
-		};
-
-		string myName = bus.Hello ();
-		Console.WriteLine ("myName: " + myName);
-
-
-		ObjectPath myOpath = new ObjectPath ("/org/ndesk/testexceptions");
 		string myNameReq = "org.ndesk.testexceptions";
+		ObjectPath myOpath = new ObjectPath ("/org/ndesk/testexceptions");
 
 		DemoObject demo;
 
 		if (bus.NameHasOwner (myNameReq)) {
-			demo = conn.GetObject<DemoObject> (myNameReq, myOpath);
+			demo = bus.GetObject<DemoObject> (myNameReq, myOpath);
 		} else {
 			NameReply nameReply = bus.RequestName (myNameReq, NameFlag.None);
 
 			Console.WriteLine ("nameReply: " + nameReply);
 
 			demo = new DemoObject ();
-			conn.Register (myNameReq, myOpath, demo);
+			bus.Register (myNameReq, myOpath, demo);
 
 			while (true)
-				conn.Iterate ();
+				bus.Iterate ();
 		}
-		//end ugly bits
 
 		Console.WriteLine ();
 		//org.freedesktop.DBus.Error.InvalidArgs: Requested bus name "" is not valid
 		try {
-			bus.RequestName ("", NameFlag.None);
+			bus.RequestName ("");
 		} catch (Exception e) {
 			Console.WriteLine (e);
 		}

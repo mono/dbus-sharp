@@ -36,7 +36,7 @@ public class Monitor
 		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
 		string name = "org.freedesktop.DBus";
 
-		Bus bus = conn.GetObject<Bus> (name, opath);
+		IBus bus = conn.GetObject<IBus> (name, opath);
 
 		bus.NameAcquired += delegate (string acquired_name) {
 			Console.WriteLine ("NameAcquired: " + acquired_name);
