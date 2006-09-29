@@ -11,7 +11,7 @@ public class ManagedDBusTestSample
 {
 	public static void Main ()
 	{
-		Bus bus = Bus.SessionBus;
+		Bus bus = Bus.Session;
 
 		SampleInterface sample = bus.GetObject<SampleInterface> ("org.designfu.SampleService", new ObjectPath ("/SomeObject"));
 

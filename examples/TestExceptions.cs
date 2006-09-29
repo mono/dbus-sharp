@@ -11,7 +11,7 @@ public class ManagedDBusTestExceptions
 {
 	public static void Main ()
 	{
-		Bus bus = Bus.SessionBus;
+		Bus bus = Bus.Session;
 
 		string myNameReq = "org.ndesk.testexceptions";
 		ObjectPath myOpath = new ObjectPath ("/org/ndesk/testexceptions");

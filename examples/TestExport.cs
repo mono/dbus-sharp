@@ -11,7 +11,7 @@ public class ManagedDBusTestExport
 {
 	public static void Main ()
 	{
-		Bus bus = Bus.SessionBus;
+		Bus bus = Bus.Session;
 
 		ObjectPath myOpath = new ObjectPath ("/org/ndesk/test");
 		string myNameReq = "org.ndesk.test";

@@ -11,7 +11,7 @@ public class Monitor
 {
 	public static void Main (string[] args)
 	{
-		string addr = Address.SessionBus;
+		string addr = Address.Session;
 
 		if (args.Length == 1) {
 			string arg = args[0];
@@ -19,10 +19,10 @@ public class Monitor
 			switch (arg)
 			{
 				case "--system":
-					addr = Address.SystemBus;
+					addr = Address.System;
 					break;
 				case "--session":
-					addr = Address.SessionBus;
+					addr = Address.Session;
 					break;
 				default:
 					Console.Error.WriteLine ("Usage: monitor.exe [--system | --session] [watch expressions]");

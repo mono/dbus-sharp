@@ -15,7 +15,7 @@ public class ManagedDBusTestNotifications
 {
 	public static void Main ()
 	{
-		Bus bus = Bus.SessionBus;
+		Bus bus = Bus.Session;
 
 		Notifications nf = bus.GetObject<Notifications> ("org.freedesktop.Notifications", new ObjectPath ("/org/freedesktop/Notifications"));
 

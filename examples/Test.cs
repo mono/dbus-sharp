@@ -10,7 +10,7 @@ public class ManagedDBusTest
 {
 	public static void Main ()
 	{
-		Connection conn = Connection.Open (Address.SessionBus);
+		Connection conn = Connection.Open (Address.Session);
 
 		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
 		string name = "org.freedesktop.DBus";
