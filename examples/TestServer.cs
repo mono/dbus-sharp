@@ -41,6 +41,7 @@ public class TestServer
 			conn = new Connection ();
 			conn.OpenPrivate (addr);
 			DemoObject demo = conn.GetObject<DemoObject> (myNameReq, myOpath);
+			demo.GiveNoReply ();
 			//float ret = demo.Hello ("hi from test client", 21);
 			float ret = 200;
 			while (ret > 5) {
@@ -128,5 +129,10 @@ public class DemoObject : MarshalByRefObject
 		Console.WriteLine ("Got a Hello(" + arg0 + ", " + arg1 +")");
 
 		return (float)arg1/2;
+	}
+
+	public void GiveNoReply ()
+	{
+		Console.WriteLine ("Asked to give no reply");
 	}
 }
