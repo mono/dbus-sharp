@@ -47,6 +47,13 @@ public class ManagedDBusTestExceptions
 		} catch (Exception e) {
 			Console.WriteLine (e);
 		}
+
+		Console.WriteLine ();
+		try {
+		demo.ThrowSomeExceptionNoRet ();
+		} catch (Exception e) {
+			Console.WriteLine (e);
+		}
 		//handle the thrown exception
 		//conn.Iterate ();
 	}
@@ -60,5 +67,12 @@ public class DemoObject : MarshalByRefObject
 		Console.WriteLine ("Asked to throw some Exception");
 
 		throw new Exception ("Some Exception");
+	}
+
+	public void ThrowSomeExceptionNoRet ()
+	{
+		Console.WriteLine ("Asked to throw some Exception NoRet");
+
+		throw new Exception ("Some Exception NoRet");
 	}
 }
