@@ -11,7 +11,7 @@ public class Monitor
 {
 	public static void Main (string[] args)
 	{
-		string addr = Address.Session;
+		Connection bus = Bus.Session;
 
 		if (args.Length == 1) {
 			string arg = args[0];
@@ -19,10 +19,10 @@ public class Monitor
 			switch (arg)
 			{
 				case "--system":
-					addr = Address.System;
+					bus = Bus.System;
 					break;
 				case "--session":
-					addr = Address.Session;
+					bus = Bus.Session;
 					break;
 				default:
 					Console.Error.WriteLine ("Usage: monitor.exe [--system | --session] [watch expressions]");
@@ -30,22 +30,6 @@ public class Monitor
 					return;
 			}
 		}
-
-		Connection conn = Connection.Open (addr);
-
-		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
-		string name = "org.freedesktop.DBus";
-
-		IBus bus = conn.GetObject<IBus> (name, opath);
-
-		bus.NameAcquired += delegate (string acquired_name) {
-			Console.WriteLine ("NameAcquired: " + acquired_name);
-		};
-
-		bus.Hello ();
-
-		//hack to process the NameAcquired signal synchronously
-		conn.Iterate ();
 
 		if (args.Length > 1) {
 			//install custom match rules only
@@ -60,7 +44,7 @@ public class Monitor
 		}
 
 		while (true) {
-			Message msg = conn.ReadMessage ();
+			Message msg = bus.ReadMessage ();
 			PrintMessage (msg);
 			Console.WriteLine ();
 		}
