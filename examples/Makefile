@@ -2,7 +2,7 @@ DBUS_SHARP_PREFIX=..
 
 VPATH=$(DBUS_SHARP_PREFIX)/src
 
-all: run test.exe test-sample.exe test-export.exe test-exceptions.exe test-notifications.exe
+all: run test.exe test-sample.exe test-export.exe test-exceptions.exe test-notifications.exe test-server-tcp.exe
 
 test.exe: NDesk.DBus.dll Test.cs
 
@@ -11,6 +11,8 @@ test-sample.exe: NDesk.DBus.dll TestSample.cs
 test-export.exe: NDesk.DBus.dll TestExport.cs
 
 test-exceptions.exe: NDesk.DBus.dll TestExceptions.cs
+
+test-server-tcp.exe: NDesk.DBus.dll TestServerTcp.cs
 
 test-server.exe: REFS=Mono.Posix
 
