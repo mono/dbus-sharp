@@ -18,17 +18,19 @@ public class TestServerTcp
 	{
 		bool isServer;
 
-		int port = 12000;
+		int port;
 		string hostname = "127.0.0.1";
 		//IPAddress ipaddr = IPAddress.Parse ("127.0.0.1");
 
-		if (args.Length == 1 && args[0] == "server")
+		if (args.Length == 2 && args[0] == "server") {
 			isServer = true;
-		else if (args.Length == 2 && args[0] == "client") {
+			port = Int32.Parse (args[1]);
+		} else if (args.Length == 3 && args[0] == "client") {
 			isServer = false;
 			hostname = args[1];
+			port = Int32.Parse (args[2]);
 		} else {
-			Console.Error.WriteLine ("Usage: test-server-tcp [server|client HOSTNAME]");
+			Console.Error.WriteLine ("Usage: test-server-tcp [server PORT|client HOSTNAME PORT]");
 			return;
 		}
 
