@@ -6,6 +6,8 @@ all: monitor
 
 monitor.exe: NDesk.DBus.dll Monitor.cs
 
+uuidgen.exe: NDesk.DBus.dll UuidGen.cs
+
 introspect.exe: NDesk.DBus.dll Introspect.cs IntrospectionSchema.cs
 
 monitor: monitor.exe
