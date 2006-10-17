@@ -31,7 +31,6 @@ public class ManagedDBusTestExport
 			while (true)
 				bus.Iterate ();
 		}
-		//end ugly bits
 
 		demo.Say ("Hello world!");
 		demo.Say ("Sibérie");
