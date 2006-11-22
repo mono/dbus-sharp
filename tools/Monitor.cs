@@ -11,9 +11,9 @@ public class Monitor
 {
 	public static void Main (string[] args)
 	{
-		Connection bus = Bus.Session;
+		Connection bus;
 
-		if (args.Length == 1) {
+		if (args.Length >= 1) {
 			string arg = args[0];
 
 			switch (arg)
@@ -29,6 +29,8 @@ public class Monitor
 					Console.Error.WriteLine ("       If no watch expressions are provided, defaults will be used.");
 					return;
 			}
+		} else {
+			bus = Bus.Session;
 		}
 
 		if (args.Length > 1) {
