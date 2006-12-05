@@ -4,6 +4,7 @@
 
 using System;
 using NDesk.DBus;
+using NDesk.DBus.Transports;
 using org.freedesktop.DBus;
 
 using System.IO;
@@ -40,10 +41,9 @@ public class TestServerTcp
 		string myNameReq = "org.ndesk.test";
 
 		if (!isServer) {
-			conn = new Connection ();
-			TcpClient client = new TcpClient (hostname, port);
-			conn.ns = client.GetStream ();
-			//conn.SocketHandle = (long)clientSocket.Handle;
+			SocketTransport transport = new SocketTransport ();
+			transport.Open (hostname, port);
+			conn = new Connection (transport);
 
 			DemoObject demo = conn.GetObject<DemoObject> (myNameReq, myOpath);
 			demo.GiveNoReply ();
