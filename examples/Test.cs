@@ -8,9 +8,21 @@ using org.freedesktop.DBus;
 
 public class ManagedDBusTest
 {
-	public static void Main ()
+	public static void Main (string[] args)
 	{
-		Connection conn = Connection.Open (Address.Session);
+		string addr;
+		if (args.Length == 0)
+			addr = Address.Session;
+		else {
+			if (args[0] == "--session")
+				addr = Address.Session;
+			else if (args[0] == "--system")
+				addr = Address.System;
+			else
+				addr = args[0];
+		}
+
+		Connection conn = Connection.Open (addr);
 
 		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
 		string name = "org.freedesktop.DBus";
