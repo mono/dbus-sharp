@@ -64,8 +64,11 @@ public class TestServerTcp
 				TcpClient client = server.AcceptTcpClient ();
 				Console.WriteLine ("Client accepted");
 
-				conn = new Connection ();
+				//TODO: use the right abstraction here, probably using the Server class
+				SocketTransport transport = new SocketTransport ();
+				conn = new Connection (transport);
 				conn.ns = client.GetStream ();
+
 				//conn.SocketHandle = (long)clientSocket.Handle;
 
 				//ConnectionHandler.Handle (conn);
