@@ -49,7 +49,5 @@ public class ManagedDBusTest
 			Console.WriteLine ("Name " + n + " has owner: " + bus.NameHasOwner (n));
 
 		Console.WriteLine ();
-		//Console.WriteLine ("NameHasOwner: " + dbus.NameHasOwner (name));
-		//Console.WriteLine ("NameHasOwner: " + dbus.NameHasOwner ("fiz"));
 	}
 }
