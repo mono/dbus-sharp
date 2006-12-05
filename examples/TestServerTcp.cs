@@ -66,8 +66,8 @@ public class TestServerTcp
 
 				//TODO: use the right abstraction here, probably using the Server class
 				SocketTransport transport = new SocketTransport ();
+				transport.Stream = client.GetStream ();
 				conn = new Connection (transport);
-				conn.ns = client.GetStream ();
 
 				//conn.SocketHandle = (long)clientSocket.Handle;
 
