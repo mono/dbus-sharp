@@ -40,8 +40,7 @@ public class TestServerNative
 		string myNameReq = "org.ndesk.test";
 
 		if (!isServer) {
-			conn = new Connection ();
-			conn.OpenPrivate (addr);
+			conn = new Connection (Transport.Create (AddressEntry.Parse (addr)));
 			DemoObject demo = conn.GetObject<DemoObject> (myNameReq, myOpath);
 			demo.GiveNoReply ();
 			//float ret = demo.Hello ("hi from test client", 21);
@@ -55,7 +54,8 @@ public class TestServerNative
 			string path;
 			bool abstr;
 
-			Address.Parse (addr, out path, out abstr);
+			AddressEntry entry = AddressEntry.Parse (addr);
+			path = entry.Properties["path"];
 
 			UnixSocket server = new UnixSocket ();
 
@@ -87,9 +87,9 @@ public class TestServerNative
 				//PeerCred pc = new PeerCred (client);
 				//Console.WriteLine ("PeerCred: pid={0}, uid={1}, gid={2}", pc.ProcessID, pc.UserID, pc.GroupID);
 
-				conn = new Connection ();
-				conn.ns = new UnixStream (client.Handle);
-				conn.SocketHandle = (long)client.Handle;
+				UnixNativeTransport transport = new UnixNativeTransport ();
+				transport.Stream = new UnixStream (client.Handle);
+				conn = new Connection (transport);
 
 				//ConnectionHandler.Handle (conn);
 
