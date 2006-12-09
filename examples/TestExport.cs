@@ -21,7 +21,7 @@ public class ManagedDBusTestExport
 		if (bus.NameHasOwner (myNameReq)) {
 			demo = bus.GetObject<DemoObject> (myNameReq, myOpath);
 		} else {
-			NameReply nameReply = bus.RequestName (myNameReq);
+			RequestNameReply nameReply = bus.RequestName (myNameReq);
 
 			Console.WriteLine ("nameReply: " + nameReply);
 

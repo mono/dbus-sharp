@@ -21,7 +21,7 @@ public class ManagedDBusTestExceptions
 		if (bus.NameHasOwner (myNameReq)) {
 			demo = bus.GetObject<DemoObject> (myNameReq, myOpath);
 		} else {
-			NameReply nameReply = bus.RequestName (myNameReq, NameFlag.None);
+			RequestNameReply nameReply = bus.RequestName (myNameReq, NameFlag.None);
 
 			Console.WriteLine ("nameReply: " + nameReply);
 
