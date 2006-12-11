@@ -40,9 +40,9 @@ public class Monitor
 		} else {
 			//no custom match rules, install the defaults
 			bus.AddMatch (MessageFilter.CreateMatchRule (MessageType.Signal));
-			bus.AddMatch (MessageFilter.CreateMatchRule (MessageType.MethodCall));
 			bus.AddMatch (MessageFilter.CreateMatchRule (MessageType.MethodReturn));
 			bus.AddMatch (MessageFilter.CreateMatchRule (MessageType.Error));
+			bus.AddMatch (MessageFilter.CreateMatchRule (MessageType.MethodCall));
 		}
 
 		while (true) {
