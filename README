@@ -13,12 +13,16 @@ one another in a peer-to-peer configuration.
 See http://www.freedesktop.org/wiki/Software/dbus for general
 information on the D-Bus IPC mechanism.
 
-This software is currently at an early stage of development and not
-recommended for use in stable applications.
+This software is under active development but is already used by a wide
+range of applications for tasks as simple as maintaining a single
+instance of the GUI to whole instant messaging frameworks and hardware
+detection APIs.
 
-However it is hoped that it will soon provide a tested, high-performance
-bridge to and from all systems that are exposed via D-Bus, regardless of
-programming language, UI toolkit or license.
+It provides a tested, high-performance bridge to and from all systems
+that are exposed via D-Bus, regardless of programming language, UI
+toolkit or license. The source code is MIT X11 licensed (Free
+Software/Open Source), allowing integration into other projects with
+very few restrictions.
 
 The code was written and is maintained by Alp Toker <alp@atoker.com>
 
