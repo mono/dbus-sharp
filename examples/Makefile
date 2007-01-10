@@ -10,6 +10,8 @@ test-sample.exe: NDesk.DBus.dll TestSample.cs
 
 test-export.exe: NDesk.DBus.dll TestExport.cs
 
+test-export-interface.exe: NDesk.DBus.dll TestExportInterface.cs
+
 test-exceptions.exe: NDesk.DBus.dll TestExceptions.cs
 
 test-objects.exe: NDesk.DBus.dll TestObjects.cs
