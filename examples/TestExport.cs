@@ -34,6 +34,7 @@ public class ManagedDBusTestExport
 
 		demo.Say ("Hello world!");
 		demo.Say ("Sibérie");
+		demo.Say (21);
 		Console.WriteLine (demo.EchoCaps ("foo bar"));
 		Console.WriteLine (demo.GetEnum ());
 		demo.CheckEnum (DemoEnum.Bar);
@@ -129,7 +130,12 @@ public class DemoObject : MarshalByRefObject
 {
 	public void Say (string text)
 	{
-		Console.WriteLine (text);
+		Console.WriteLine ("string: " + text);
+	}
+
+	public void Say (object var)
+	{
+		Console.WriteLine ("variant: " + var);
 	}
 
 	public string EchoCaps (string text)

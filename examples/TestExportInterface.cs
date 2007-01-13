@@ -70,11 +70,29 @@ public interface IDemoObject
 {
 	event SomeEventHandler SomeEvent;
 	void FireOffSomeEvent ();
+	void Say (object var);
 }
 
-public class DemoObject : IDemoObject
+[Interface ("org.ndesk.test2")]
+public interface IDemoObjectTwo
+{
+	int Say (string str);
+}
+
+public class DemoObject : IDemoObject, IDemoObjectTwo
 {
 	public event SomeEventHandler SomeEvent;
+
+	public void Say (object var)
+	{
+		Console.WriteLine ("variant: " + var);
+	}
+
+	public int Say (string str)
+	{
+		Console.WriteLine ("string: " + str);
+		return str.Length;
+	}
 
 	public void FireOffSomeEvent ()
 	{
