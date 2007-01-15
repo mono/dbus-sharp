@@ -52,7 +52,7 @@ public class Monitor
 		}
 	}
 
-	public static void PrintMessage (Message msg)
+	internal static void PrintMessage (Message msg)
 	{
 		Console.WriteLine ("Message:");
 		//Console.WriteLine ("\t" + "Endianness: " + msg.Header.Endianness);
