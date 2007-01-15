@@ -2,15 +2,15 @@ DBUS_SHARP_PREFIX=..
 
 VPATH=$(DBUS_SHARP_PREFIX)/src
 
-all: monitor
+all: dbus-monitor
 
-monitor.exe: NDesk.DBus.dll Monitor.cs
+dbus-monitor.exe: NDesk.DBus.dll Monitor.cs
 
 uuidgen.exe: NDesk.DBus.dll UuidGen.cs
 
 introspect.exe: NDesk.DBus.dll Introspect.cs IntrospectionSchema.cs
 
-monitor: monitor.exe
+dbus-monitor: dbus-monitor.exe
 	echo '#!/bin/sh' > $@
 	echo 'export MONO_PATH=$(DBUS_SHARP_PREFIX)/src:$$MONO_PATH' >> $@
 	echo '$(RUNTIME) $^ $$@' >> $@
