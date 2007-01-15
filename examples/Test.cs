@@ -10,19 +10,18 @@ public class ManagedDBusTest
 {
 	public static void Main (string[] args)
 	{
-		string addr;
+		Connection conn;
+
 		if (args.Length == 0)
-			addr = Address.Session;
+			conn = Bus.Session;
 		else {
 			if (args[0] == "--session")
-				addr = Address.Session;
+				conn = Bus.Session;
 			else if (args[0] == "--system")
-				addr = Address.System;
+				conn = Bus.System;
 			else
-				addr = args[0];
+				conn = Connection.Open (args[0]);
 		}
-
-		Connection conn = Connection.Open (addr);
 
 		ObjectPath opath = new ObjectPath ("/org/freedesktop/DBus");
 		string name = "org.freedesktop.DBus";
@@ -32,9 +31,6 @@ public class ManagedDBusTest
 		bus.NameAcquired += delegate (string acquired_name) {
 			Console.WriteLine ("NameAcquired: " + acquired_name);
 		};
-
-		string myName = bus.Hello ();
-		Console.WriteLine ("myName: " + myName);
 
 		Console.WriteLine ();
 		string xmlData = bus.Introspect ();
