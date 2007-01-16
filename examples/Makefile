@@ -2,7 +2,7 @@ DBUS_SHARP_PREFIX=..
 
 VPATH=$(DBUS_SHARP_PREFIX)/src
 
-all: run test.exe test-sample.exe test-export.exe test-exceptions.exe test-objects.exe test-notifications.exe test-server-tcp.exe test-server-native.exe
+all: run test.exe test-sample.exe test-export.exe test-exceptions.exe test-objects.exe test-notifications.exe
 
 test.exe: NDesk.DBus.dll Test.cs
 
