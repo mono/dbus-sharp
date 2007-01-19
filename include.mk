@@ -4,6 +4,9 @@ CSC=gmcs $(CSC_DEBUGFLAGS)
 MONO_DEBUGFLAGS=--debug
 RUNTIME=mono $(MONO_DEBUGFLAGS)
 GACUTIL=gacutil
+GACUTIL_FLAGS=-root $(DESTDIR)$(prefix)/lib
+#this isn't great
+prefix=$(shell dirname `which gacutil`)/..
 
 #%.exe:
 %.exe %.dll %.module:
