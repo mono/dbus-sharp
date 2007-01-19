@@ -3,6 +3,7 @@ CSC_DEBUGFLAGS=-debug
 CSC=gmcs $(CSC_DEBUGFLAGS)
 MONO_DEBUGFLAGS=--debug
 RUNTIME=mono $(MONO_DEBUGFLAGS)
+GACUTIL=gacutil
 
 #%.exe:
 %.exe %.dll %.module:
