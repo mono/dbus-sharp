@@ -1,3 +1,3 @@
 all:
 	$(MAKE) -C src
-#	$(MAKE) -C tools
+	$(MAKE) -C tools
