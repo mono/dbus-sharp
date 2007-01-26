@@ -47,6 +47,8 @@ public class Monitor
 
 		while (true) {
 			Message msg = bus.ReadMessage ();
+			if (msg == null)
+				break;
 			PrintMessage (msg);
 			Console.WriteLine ();
 		}
