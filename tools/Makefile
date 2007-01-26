@@ -4,8 +4,6 @@ VPATH=$(DBUS_SHARP_PREFIX)/src
 
 all: dbus-monitor
 
-dbus-monitor.exe: CSFLAGS=-keyfile:../ndesk.snk
-
 dbus-monitor.exe: NDesk.DBus.dll Monitor.cs ../ndesk.snk
 
 uuidgen.exe: NDesk.DBus.dll UuidGen.cs

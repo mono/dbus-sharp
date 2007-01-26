@@ -10,7 +10,7 @@ prefix=$(shell dirname `which gacutil`)/..
 
 #%.exe:
 %.exe %.dll %.module:
-	$(CSC) $(CSFLAGS) -out:$@ -t:$(TARGET) $(addprefix -pkg:,$(PKGS)) $(addprefix -r:,$(REFS)) $(addprefix -r:,$(filter %.dll,$^)) $(addprefix -addmodule:,$(filter %.module,$^)) $(filter %.cs,$^)
+	$(CSC) $(CSFLAGS) -out:$@ -t:$(TARGET) $(addprefix -pkg:,$(PKGS)) $(addprefix -r:,$(REFS)) $(addprefix -r:,$(filter %.dll,$^)) $(addprefix -addmodule:,$(filter %.module,$^)) $(addprefix -keyfile:,$(filter %.snk,$^)) $(filter %.cs,$^)
 
 %.exe: TARGET = exe
 
