@@ -1,0 +1,8 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+
+Name: NDesk.DBus
+Description: Managed D-Bus IPC protocol library and CLR binding
+Version: 0.4.0
+Libs: -r:${libdir}/mono/lib/ndesk-dbus-1.0/NDesk.DBus.dll
