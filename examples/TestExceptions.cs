@@ -42,14 +42,14 @@ public class ManagedDBusTestExceptions
 		//TODO: make this work as expected (what is expected?)
 		Console.WriteLine ();
 		try {
-		demo.ThrowSomeException ();
+			demo.ThrowSomeException ();
 		} catch (Exception e) {
 			Console.WriteLine (e);
 		}
 
 		Console.WriteLine ();
 		try {
-		demo.ThrowSomeExceptionNoRet ();
+			demo.ThrowSomeExceptionNoRet ();
 		} catch (Exception e) {
 			Console.WriteLine (e);
 		}
@@ -58,21 +58,21 @@ public class ManagedDBusTestExceptions
 
 		Console.WriteLine ();
 		try {
-		demo.HandleVariant (null);
+			demo.HandleVariant (null);
 		} catch (Exception e) {
 			Console.WriteLine (e);
 		}
 
 		Console.WriteLine ();
 		try {
-		demo.HandleString (null);
+			demo.HandleString (null);
 		} catch (Exception e) {
 			Console.WriteLine (e);
 		}
 
 		Console.WriteLine ();
 		try {
-		demo.HandleArray (null);
+			demo.HandleArray (null);
 		} catch (Exception e) {
 			Console.WriteLine (e);
 		}
