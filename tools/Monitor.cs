@@ -54,34 +54,37 @@ public class Monitor
 		}
 	}
 
+	const string indent = "  ";
+
 	internal static void PrintMessage (Message msg)
 	{
 		Console.WriteLine ("Message (" + msg.Header.Endianness + " endian, v" + msg.Header.MajorVersion + "):");
-		Console.WriteLine ("\t" + "Type: " + msg.Header.MessageType);
-		Console.WriteLine ("\t" + "Flags: " + msg.Header.Flags);
-		Console.WriteLine ("\t" + "Serial: " + msg.Header.Serial);
+		Console.WriteLine (indent + "Type: " + msg.Header.MessageType);
+		Console.WriteLine (indent + "Flags: " + msg.Header.Flags);
+		Console.WriteLine (indent + "Serial: " + msg.Header.Serial);
 
 		//foreach (HeaderField hf in msg.HeaderFields)
-		//	Console.WriteLine ("\t" + hf.Code + ": " + hf.Value);
-		Console.WriteLine ("\tHeader Fields:");
+		//	Console.WriteLine (indent + hf.Code + ": " + hf.Value);
+		Console.WriteLine (indent + "Header Fields:");
 		foreach (KeyValuePair<FieldCode,object> field in msg.Header.Fields)
-			Console.WriteLine ("\t\t" + field.Key + ": " + field.Value);
+			Console.WriteLine (indent + indent + field.Key + ": " + field.Value);
 
-		Console.WriteLine ("\tBody (" + msg.Header.Length + " bytes):");
+		Console.WriteLine (indent + "Body (" + msg.Header.Length + " bytes):");
 		if (msg.Body != null) {
 			MessageReader reader = new MessageReader (msg);
 
 			//TODO: this needs to be done more intelligently
+			//TODO: number the args
 			try {
 				foreach (DType dtype in msg.Signature.GetBuffer ()) {
 					if (dtype == DType.Invalid)
 						continue;
 					object arg;
 					reader.GetValue (dtype, out arg);
-					Console.WriteLine ("\t\t" + dtype + ": " + arg);
+					Console.WriteLine (indent + indent + dtype + ": " + arg);
 				}
 			} catch {
-				Console.WriteLine ("\t\tmonitor is too dumb to decode message body");
+				Console.WriteLine (indent + indent + "monitor is too dumb to decode message body");
 			}
 		}
 	}
