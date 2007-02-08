@@ -56,7 +56,7 @@ public class Monitor
 
 	internal static void PrintMessage (Message msg)
 	{
-		Console.WriteLine ("Message (" + msg.Header.Endianness + " endian, v" + msg.Header.MajorVersion + ")");
+		Console.WriteLine ("Message (" + msg.Header.Endianness + " endian, v" + msg.Header.MajorVersion + "):");
 		Console.WriteLine ("\t" + "Type: " + msg.Header.MessageType);
 		Console.WriteLine ("\t" + "Flags: " + msg.Header.Flags);
 		Console.WriteLine ("\t" + "Serial: " + msg.Header.Serial);
@@ -67,7 +67,7 @@ public class Monitor
 		foreach (KeyValuePair<FieldCode,object> field in msg.Header.Fields)
 			Console.WriteLine ("\t\t" + field.Key + ": " + field.Value);
 
-		Console.WriteLine ("\tBody (" + msg.Header.Length + " bytes)");
+		Console.WriteLine ("\tBody (" + msg.Header.Length + " bytes):");
 		if (msg.Body != null) {
 			MessageReader reader = new MessageReader (msg);
 
