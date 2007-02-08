@@ -1,6 +1,8 @@
 prefix=@prefix@
+datadir=${prefix}/share
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
+session_bus_services_dir=${datadir}/dbus-1/services
 
 Name: NDesk.DBus
 Description: Managed D-Bus IPC protocol library and CLR binding
