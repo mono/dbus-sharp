@@ -34,6 +34,7 @@ public class ManagedDBusTestExport
 		demo.Say ("Hello world!");
 		demo.Say ("Sibérie");
 		demo.Say (21);
+		demo.SayByteArray (0, 2, 1);
 		Console.WriteLine (demo.EchoCaps ("foo bar"));
 		Console.WriteLine (demo.GetEnum ());
 		demo.CheckEnum (DemoEnum.Bar);
@@ -135,6 +136,12 @@ public class DemoObject : MarshalByRefObject
 	public void Say (object var)
 	{
 		Console.WriteLine ("variant: " + var);
+	}
+
+	public void SayByteArray (params byte[] data)
+	{
+		for (int i = 0 ; i != data.Length ; i++)
+			Console.WriteLine ("data[" + i + "]: " + data[i]);
 	}
 
 	public string EchoCaps (string text)
