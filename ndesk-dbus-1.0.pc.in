@@ -7,4 +7,5 @@ session_bus_services_dir=${datadir}/dbus-1/services
 Name: NDesk.DBus
 Description: Managed D-Bus IPC protocol library and CLR binding
 Version: 0.4.0
+URL: http://www.ndesk.org/DBusSharp
 Libs: -r:${libdir}/mono/lib/ndesk-dbus-1.0/NDesk.DBus.dll
