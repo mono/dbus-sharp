@@ -113,6 +113,12 @@ public class ManagedDBusTestExport
 			demo.UseSomeVariant ("hello");
 			demo.UseSomeVariant (21);
 		}
+
+		Console.WriteLine ();
+		{
+			Console.WriteLine ("get SomeProp: " + demo.SomeProp);
+			demo.SomeProp = 4;
+		}
 	}
 
 	public static void HandleSomeEventA (string arg1, object arg2, double arg3, MyTuple mt)
@@ -291,6 +297,16 @@ public class DemoObject : MarshalByRefObject
 	public void UseSomeVariant (object value)
 	{
 		Console.WriteLine ("variant value: " + value);
+	}
+
+	public int SomeProp
+	{
+		get {
+			return 1;
+		}
+		set {
+			Console.WriteLine ("set prop SomeProp: " + value);
+		}
 	}
 }
 
