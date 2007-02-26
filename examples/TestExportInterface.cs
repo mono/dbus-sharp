@@ -51,6 +51,12 @@ public class ManagedDBusTestExport
 		//bus.Iterate ();
 
 		Console.WriteLine ();
+
+		Console.WriteLine (demo.GetSomeVariant ());
+
+		Console.WriteLine ();
+
+		demo.ThrowSomeException ();
 	}
 
 	public static void HandleSomeEventA (string arg1, object arg2, double arg3, MyTuple mt)
@@ -70,6 +76,8 @@ public interface IDemoObject
 	event SomeEventHandler SomeEvent;
 	void FireOffSomeEvent ();
 	void Say (object var);
+	object GetSomeVariant ();
+	void ThrowSomeException ();
 }
 
 [Interface ("org.ndesk.test2")]
@@ -105,6 +113,18 @@ public class DemoObject : IDemoObject, IDemoObjectTwo
 			SomeEvent ("some string", 21, 19.84, mt);
 			Console.WriteLine ("Fired off SomeEvent");
 		}
+	}
+
+	public object GetSomeVariant ()
+	{
+		Console.WriteLine ("GetSomeVariant()");
+
+		return new byte[] {3, 2, 1};
+	}
+
+	public void ThrowSomeException ()
+	{
+		throw new Exception ("Some exception");
 	}
 }
 
