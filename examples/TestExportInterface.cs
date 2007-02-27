@@ -19,7 +19,7 @@ public class ManagedDBusTestExport
 		IDemoObject demo;
 
 		if (bus.NameHasOwner (myNameReq)) {
-			demo = bus.GetObject<IDemoObject> (myNameReq, myOpath);
+			demo = bus.GetObject<IDemo> (myNameReq, myOpath);
 		} else {
 			demo = new DemoObject ();
 			bus.Register (myNameReq, myOpath, demo);
@@ -56,6 +56,9 @@ public class ManagedDBusTestExport
 
 		Console.WriteLine ();
 
+		demo.Say2 ("demo.Say2");
+		((IDemoObjectTwo)demo).Say2 ("((IDemoObjectTwo)demo).Say2");
+
 		demo.ThrowSomeException ();
 	}
 
@@ -76,6 +79,7 @@ public interface IDemoObject
 	event SomeEventHandler SomeEvent;
 	void FireOffSomeEvent ();
 	void Say (object var);
+	void Say2 (string str);
 	object GetSomeVariant ();
 	void ThrowSomeException ();
 }
@@ -84,9 +88,14 @@ public interface IDemoObject
 public interface IDemoObjectTwo
 {
 	int Say (string str);
+	void Say2 (string str);
 }
 
-public class DemoObject : IDemoObject, IDemoObjectTwo
+public interface IDemo : IDemoObject, IDemoObjectTwo
+{
+}
+
+public class DemoObject : IDemo
 {
 	public event SomeEventHandler SomeEvent;
 
@@ -99,6 +108,16 @@ public class DemoObject : IDemoObject, IDemoObjectTwo
 	{
 		Console.WriteLine ("string: " + str);
 		return str.Length;
+	}
+
+	public void Say2 (string str)
+	{
+		Console.WriteLine ("IDemoObject.Say2: " + str);
+	}
+
+	void IDemoObjectTwo.Say2 (string str)
+	{
+		Console.WriteLine ("IDemoObjectTwo.Say2: " + str);
 	}
 
 	public void FireOffSomeEvent ()
