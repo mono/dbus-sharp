@@ -16,24 +16,20 @@ public class test
 	{
 		string fname = args[0];
 		StreamReader sr = new StreamReader (fname);
-		XmlSerializer sz = new XmlSerializer (typeof (Interface));
-		Interface iface = (Interface)sz.Deserialize (sr);
+		XmlSerializer sz = new XmlSerializer (typeof (Node));
+		Node node = (Node)sz.Deserialize (sr);
 
-		foreach (object o in iface.Items) {
-			if (o is Property) {
-				Property prop = (Property)o;
-				Console.WriteLine (prop.Name);
-			}
+		Interface iface = node.Interfaces[1];
 
-			if (o is Method) {
-				Method meth = (Method)o;
-				Console.Write ("void " + meth.Name);
-				Console.Write (" (");
-				foreach (Argument arg in meth.Arguments)
-					Console.Write ("[" + arg.Direction + "] " + arg.Type + " " + arg.Name + ", ");
-				Console.Write (");");
-				Console.WriteLine ();
-			}
+		foreach (Method meth in iface.Methods) {
+			Console.Write (meth.Name);
+			Console.Write (" (");
+
+			if (meth.Arguments != null)
+			foreach (Argument arg in meth.Arguments)
+				Console.Write ("[" + arg.Direction + "] " + arg.Type + " " + arg.Name + ", ");
+			Console.Write (");");
+			Console.WriteLine ();
 		}
 	}
 }
