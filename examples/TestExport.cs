@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using NDesk.DBus;
 using org.freedesktop.DBus;
 
+//NOTE: MarshalByRefObject use is not recommended in new code
+//See TestExportInterface.cs for a more current example
 public class ManagedDBusTestExport
 {
 	public static void Main ()
