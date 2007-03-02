@@ -32,13 +32,6 @@ public class ManagedDBusTestExport
 		}
 
 		Console.WriteLine ();
-		demo.SomeEvent += delegate (string arg1, object arg2, double arg3, MyTuple mt) {Console.WriteLine ("SomeEvent handler: " + arg1 + ", " + arg2 + ", " + arg3 + ", " + mt.A + ", " + mt.B);};
-		demo.SomeEvent += delegate (string arg1, object arg2, double arg3, MyTuple mt) {Console.WriteLine ("SomeEvent handler two: " + arg1 + ", " + arg2 + ", " + arg3 + ", " + mt.A + ", " + mt.B);};
-		demo.FireOffSomeEvent ();
-		//handle the raised signal
-		//bus.Iterate ();
-
-		Console.WriteLine ();
 		demo.SomeEvent += HandleSomeEventA;
 		demo.FireOffSomeEvent ();
 		//handle the raised signal
@@ -46,6 +39,13 @@ public class ManagedDBusTestExport
 
 		Console.WriteLine ();
 		demo.SomeEvent -= HandleSomeEventA;
+		demo.FireOffSomeEvent ();
+		//handle the raised signal
+		//bus.Iterate ();
+
+		Console.WriteLine ();
+		demo.SomeEvent += delegate (string arg1, object arg2, double arg3, MyTuple mt) {Console.WriteLine ("SomeEvent handler: " + arg1 + ", " + arg2 + ", " + arg3 + ", " + mt.A + ", " + mt.B);};
+		demo.SomeEvent += delegate (string arg1, object arg2, double arg3, MyTuple mt) {Console.WriteLine ("SomeEvent handler two: " + arg1 + ", " + arg2 + ", " + arg3 + ", " + mt.A + ", " + mt.B);};
 		demo.FireOffSomeEvent ();
 		//handle the raised signal
 		//bus.Iterate ();
