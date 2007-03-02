@@ -22,31 +22,35 @@ public class ManagedDBusTestObjects
 
 public class Device : IDevice
 {
-	public string GetName ()
+	public string Name
 	{
-		return "Some device";
+		get {
+			return "Some device";
+		}
 	}
 }
 
 public class DeviceManager : IDeviceManager
 {
-	public IDevice GetCurrentDevice ()
+	public IDevice CurrentDevice
 	{
-		return new Device ();
+		get {
+			return new Device ();
+		}
 	}
 }
 
 public interface IDevice
 {
-	string GetName ();
+	string Name { get; }
 }
 
 public interface IDeviceManager
 {
-	IDevice GetCurrentDevice ();
+	IDevice CurrentDevice { get; }
 }
 
 public interface IUglyDeviceManager
 {
-	ObjectPath GetCurrentDevice ();
+	ObjectPath CurrentDevice { get; }
 }
