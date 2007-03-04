@@ -79,8 +79,7 @@ public class Monitor
 				foreach (DType dtype in msg.Signature.GetBuffer ()) {
 					if (dtype == DType.Invalid)
 						continue;
-					object arg;
-					reader.GetValue (dtype, out arg);
+					object arg = reader.ReadValue (dtype);
 					Console.WriteLine (indent + indent + dtype + ": " + arg);
 				}
 			} catch {
