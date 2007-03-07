@@ -59,6 +59,8 @@ public class ManagedDBusTestExport
 		demo.Say2 ("demo.Say2");
 		((IDemoObjectTwo)demo).Say2 ("((IDemoObjectTwo)demo).Say2");
 
+		demo.SayEnum (DemoEnum.Bar, DemoEnum.Foo);
+
 		demo.ThrowSomeException ();
 	}
 
@@ -79,6 +81,7 @@ public interface IDemoObject
 	event SomeEventHandler SomeEvent;
 	void FireOffSomeEvent ();
 	void Say (object var);
+	void SayEnum (DemoEnum a, DemoEnum b);
 	void Say2 (string str);
 	object GetSomeVariant ();
 	void ThrowSomeException ();
@@ -108,6 +111,11 @@ public class DemoObject : IDemo
 	{
 		Console.WriteLine ("string: " + str);
 		return str.Length;
+	}
+
+	public void SayEnum (DemoEnum a, DemoEnum b)
+	{
+		Console.WriteLine ("IDemoObject.Say2: " + a + ", " + b);
 	}
 
 	public void Say2 (string str)
@@ -147,7 +155,7 @@ public class DemoObject : IDemo
 	}
 }
 
-public enum DemoEnum
+public enum DemoEnum : byte
 {
 	Foo,
 	Bar,
