@@ -8,4 +8,4 @@ Name: NDesk.DBus
 Description: Managed D-Bus IPC protocol library and CLR binding
 Version: 0.5.1
 URL: http://www.ndesk.org/DBusSharp
-Libs: -r:${libdir}/mono/lib/ndesk-dbus-1.0/NDesk.DBus.dll
+Libs: -r:${libdir}/mono/ndesk-dbus-1.0/NDesk.DBus.dll
