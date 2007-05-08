@@ -13,18 +13,20 @@ public class ManagedDBusTestExport
 	{
 		Bus bus = Bus.Session;
 
-		ObjectPath myOpath = new ObjectPath ("/org/ndesk/test");
-		string myNameReq = "org.ndesk.test";
+		ObjectPath path = new ObjectPath ("/org/ndesk/test");
+		string bus_name = "org.ndesk.test";
 
-		IDemoObject demo;
+		IDemoOne demo;
 
-		if (bus.NameHasOwner (myNameReq)) {
-			demo = bus.GetObject<IDemo> (myNameReq, myOpath);
+		//NOTE: this is not the best way to provide single instance detection.
+		//This example needs to be updated.
+		if (bus.NameHasOwner (bus_name)) {
+			demo = bus.GetObject<IDemo> (bus_name, path);
 		} else {
-			demo = new DemoObject ();
-			bus.Register (myNameReq, myOpath, demo);
+			demo = new Demo ();
+			bus.Register (bus_name, path, demo);
 
-			RequestNameReply nameReply = bus.RequestName (myNameReq);
+			RequestNameReply nameReply = bus.RequestName (bus_name);
 			Console.WriteLine ("RequestNameReply: " + nameReply);
 
 			while (true)
@@ -34,21 +36,15 @@ public class ManagedDBusTestExport
 		Console.WriteLine ();
 		demo.SomeEvent += HandleSomeEventA;
 		demo.FireOffSomeEvent ();
-		//handle the raised signal
-		//bus.Iterate ();
 
 		Console.WriteLine ();
 		demo.SomeEvent -= HandleSomeEventA;
 		demo.FireOffSomeEvent ();
-		//handle the raised signal
-		//bus.Iterate ();
 
 		Console.WriteLine ();
 		demo.SomeEvent += delegate (string arg1, object arg2, double arg3, MyTuple mt) {Console.WriteLine ("SomeEvent handler: " + arg1 + ", " + arg2 + ", " + arg3 + ", " + mt.A + ", " + mt.B);};
 		demo.SomeEvent += delegate (string arg1, object arg2, double arg3, MyTuple mt) {Console.WriteLine ("SomeEvent handler two: " + arg1 + ", " + arg2 + ", " + arg3 + ", " + mt.A + ", " + mt.B);};
 		demo.FireOffSomeEvent ();
-		//handle the raised signal
-		//bus.Iterate ();
 
 		Console.WriteLine ();
 
@@ -57,7 +53,7 @@ public class ManagedDBusTestExport
 		Console.WriteLine ();
 
 		demo.Say2 ("demo.Say2");
-		((IDemoObjectTwo)demo).Say2 ("((IDemoObjectTwo)demo).Say2");
+		((IDemoTwo)demo).Say2 ("((IDemoTwo)demo).Say2");
 
 		demo.SayEnum (DemoEnum.Bar, DemoEnum.Foo);
 
@@ -76,7 +72,7 @@ public class ManagedDBusTestExport
 }
 
 [Interface ("org.ndesk.test")]
-public interface IDemoObject
+public interface IDemoOne
 {
 	event SomeEventHandler SomeEvent;
 	void FireOffSomeEvent ();
@@ -88,17 +84,25 @@ public interface IDemoObject
 }
 
 [Interface ("org.ndesk.test2")]
-public interface IDemoObjectTwo
+public interface IDemoTwo
 {
 	int Say (string str);
 	void Say2 (string str);
 }
 
-public interface IDemo : IDemoObject, IDemoObjectTwo
+public interface IDemo : IDemoOne, IDemoTwo
 {
 }
 
-public class DemoObject : IDemo
+public class Demo : DemoBase
+{
+	public override void Say2 (string str)
+	{
+		Console.WriteLine ("Subclassed IDemoOne.Say2: " + str);
+	}
+}
+
+public class DemoBase : IDemo
 {
 	public event SomeEventHandler SomeEvent;
 
@@ -115,17 +119,17 @@ public class DemoObject : IDemo
 
 	public void SayEnum (DemoEnum a, DemoEnum b)
 	{
-		Console.WriteLine ("IDemoObject.Say2: " + a + ", " + b);
+		Console.WriteLine ("IDemoOne.Say2: " + a + ", " + b);
 	}
 
-	public void Say2 (string str)
+	public virtual void Say2 (string str)
 	{
-		Console.WriteLine ("IDemoObject.Say2: " + str);
+		Console.WriteLine ("IDemoOne.Say2: " + str);
 	}
 
-	void IDemoObjectTwo.Say2 (string str)
+	void IDemoTwo.Say2 (string str)
 	{
-		Console.WriteLine ("IDemoObjectTwo.Say2: " + str);
+		Console.WriteLine ("IDemoTwo.Say2: " + str);
 	}
 
 	public void FireOffSomeEvent ()
