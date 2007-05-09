@@ -13,7 +13,7 @@ public class ManagedDBusTestSample
 	{
 		Bus bus = Bus.Session;
 
-		SampleInterface sample = bus.GetObject<SampleInterface> ("org.designfu.SampleService", new ObjectPath ("/SomeObject"));
+		SampleInterface sample = bus.GetObject<SampleInterface> ("com.example.SampleService", new ObjectPath ("/SomeObject"));
 
 		Console.WriteLine ();
 		string xmlData = sample.Introspect ();
@@ -36,7 +36,7 @@ public class ManagedDBusTestSample
 	}
 }
 
-[Interface ("org.designfu.SampleInterface")]
+[Interface ("com.example.SampleInterface")]
 public interface SampleInterface : Introspectable
 {
 	//void HelloWorld (object hello_message);
