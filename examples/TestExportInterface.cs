@@ -57,6 +57,12 @@ public class ManagedDBusTestExport
 
 		demo.SayEnum (DemoEnum.Bar, DemoEnum.Foo);
 
+		uint n;
+		string ostr;
+		demo.WithOutParameters (out n, "21", out ostr);
+		Console.WriteLine ("n: " + n);
+		Console.WriteLine ("ostr: " + ostr);
+
 		demo.ThrowSomeException ();
 	}
 
@@ -81,6 +87,7 @@ public interface IDemoOne
 	void Say2 (string str);
 	object GetSomeVariant ();
 	void ThrowSomeException ();
+	void WithOutParameters (out uint n, string str, out string ostr);
 }
 
 [Interface ("org.ndesk.test2")]
@@ -150,12 +157,18 @@ public class DemoBase : IDemo
 	{
 		Console.WriteLine ("GetSomeVariant()");
 
-		return new byte[] {3, 2, 1};
+		return new byte[0];
 	}
 
 	public void ThrowSomeException ()
 	{
 		throw new Exception ("Some exception");
+	}
+
+	public void WithOutParameters (out uint n, string str, out string ostr)
+	{
+		n = UInt32.Parse (str);
+		ostr = "." + str + ".";
 	}
 }
 
