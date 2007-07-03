@@ -63,6 +63,10 @@ public class ManagedDBusTestExport
 		Console.WriteLine ("n: " + n);
 		Console.WriteLine ("ostr: " + ostr);
 
+		IDemoOne[] objs = demo.GetObjArr ();
+		foreach (IDemoOne obj in objs)
+			obj.Say ("Some obj");
+
 		demo.ThrowSomeException ();
 	}
 
@@ -88,6 +92,8 @@ public interface IDemoOne
 	object GetSomeVariant ();
 	void ThrowSomeException ();
 	void WithOutParameters (out uint n, string str, out string ostr);
+	IDemoOne[] GetEmptyObjArr ();
+	IDemoOne[] GetObjArr ();
 }
 
 [Interface ("org.ndesk.test2")]
@@ -169,6 +175,16 @@ public class DemoBase : IDemo
 	{
 		n = UInt32.Parse (str);
 		ostr = "." + str + ".";
+	}
+
+	public IDemoOne[] GetEmptyObjArr ()
+	{
+		return new Demo[] {};
+	}
+
+	public IDemoOne[] GetObjArr ()
+	{
+		return new IDemoOne[] {this};
 	}
 }
 
