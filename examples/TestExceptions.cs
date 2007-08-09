@@ -13,22 +13,22 @@ public class ManagedDBusTestExceptions
 	{
 		Bus bus = Bus.Session;
 
-		string myNameReq = "org.ndesk.testexceptions";
-		ObjectPath myOpath = new ObjectPath ("/org/ndesk/testexceptions");
+		string bus_name = "org.ndesk.testexceptions";
+		ObjectPath path = new ObjectPath ("/org/ndesk/testexceptions");
 
 		DemoObject demo;
 
-		if (bus.NameHasOwner (myNameReq)) {
-			demo = bus.GetObject<DemoObject> (myNameReq, myOpath);
-		} else {
+		if (bus.RequestName (bus_name) == RequestNameReply.PrimaryOwner) {
+			//create a new instance of the object to be exported
 			demo = new DemoObject ();
-			bus.Register (myNameReq, myOpath, demo);
+			bus.Register (bus_name, path, demo);
 
-			RequestNameReply nameReply = bus.RequestName (myNameReq, NameFlag.None);
-			Console.WriteLine ("RequestNameReply: " + nameReply);
-
+			//run the main loop
 			while (true)
 				bus.Iterate ();
+		} else {
+			//import a remote to a local proxy
+			demo = bus.GetObject<DemoObject> (bus_name, path);
 		}
 
 		Console.WriteLine ();

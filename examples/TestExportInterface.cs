@@ -13,24 +13,22 @@ public class ManagedDBusTestExport
 	{
 		Bus bus = Bus.Session;
 
-		ObjectPath path = new ObjectPath ("/org/ndesk/test");
 		string bus_name = "org.ndesk.test";
+		ObjectPath path = new ObjectPath ("/org/ndesk/test");
 
 		IDemoOne demo;
 
-		//NOTE: this is not the best way to provide single instance detection.
-		//This example needs to be updated.
-		if (bus.NameHasOwner (bus_name)) {
-			demo = bus.GetObject<IDemo> (bus_name, path);
-		} else {
+		if (bus.RequestName (bus_name) == RequestNameReply.PrimaryOwner) {
+			//create a new instance of the object to be exported
 			demo = new Demo ();
 			bus.Register (bus_name, path, demo);
 
-			RequestNameReply nameReply = bus.RequestName (bus_name);
-			Console.WriteLine ("RequestNameReply: " + nameReply);
-
+			//run the main loop
 			while (true)
 				bus.Iterate ();
+		} else {
+			//import a remote to a local proxy
+			demo = bus.GetObject<IDemo> (bus_name, path);
 		}
 
 		Console.WriteLine ();
