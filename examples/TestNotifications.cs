@@ -21,10 +21,10 @@ public class ManagedDBusTestNotifications
 
 		Console.WriteLine ();
 		Console.WriteLine ("Capabilities:");
-		foreach (string cap in nf.Capabilities)
+		foreach (string cap in nf.GetCapabilities ())
 			Console.WriteLine ("\t" + cap);
 
-		ServerInformation si = nf.ServerInformation;
+		ServerInformation si = nf.GetServerInformation ();
 
 		//TODO: ability to pass null
 		Dictionary<string,object> hints = new Dictionary<string,object> ();
