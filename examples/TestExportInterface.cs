@@ -21,7 +21,7 @@ public class ManagedDBusTestExport
 		if (bus.RequestName (bus_name) == RequestNameReply.PrimaryOwner) {
 			//create a new instance of the object to be exported
 			demo = new Demo ();
-			bus.Register (bus_name, path, demo);
+			bus.Register (path, demo);
 
 			//run the main loop
 			while (true)
