@@ -52,6 +52,7 @@ done
 AC_OUTPUT([
 Makefile
 ndesk-dbus-1.0.pc
+src/AssemblyInfo.cs
 src/Makefile
 tools/Makefile
 examples/Makefile
