@@ -134,7 +134,7 @@ public class DemoBase : IDemo
 
 	public void SayEnum (DemoEnum a, DemoEnum b)
 	{
-		Console.WriteLine ("IDemoOne.Say2: " + a + ", " + b);
+		Console.WriteLine ("SayEnum: " + a + ", " + b);
 	}
 
 	public virtual void Say2 (string str)
