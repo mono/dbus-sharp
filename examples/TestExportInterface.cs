@@ -69,6 +69,9 @@ public class ManagedDBusTestExport
 			obj.Say ("Some obj");
 		*/
 
+		Console.WriteLine("SomeProp: " + demo.SomeProp);
+		demo.SomeProp = 321;
+
 		demo.ThrowSomeException ();
 	}
 
@@ -96,6 +99,7 @@ public interface IDemoOne
 	void WithOutParameters (out uint n, string str, out string ostr);
 	IDemoOne[] GetEmptyObjArr ();
 	IDemoOne[] GetObjArr ();
+	int SomeProp { get; set; }
 }
 
 [Interface ("org.ndesk.test2")]
@@ -187,6 +191,15 @@ public class DemoBase : IDemo
 	public IDemoOne[] GetObjArr ()
 	{
 		return new IDemoOne[] {this};
+	}
+
+	public int SomeProp
+	{
+		get {
+			return 123;
+		} set {
+			Console.WriteLine ("Set SomeProp: " + value);
+		}
 	}
 }
 
