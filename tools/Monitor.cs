@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using NDesk.DBus;
 using org.freedesktop.DBus;
 
-public class Monitor
+class BusMonitor
 {
 	public static void Main (string[] args)
 	{
@@ -74,16 +74,14 @@ public class Monitor
 			MessageReader reader = new MessageReader (msg);
 
 			//TODO: this needs to be done more intelligently
-			//TODO: number the args
-			try {
-				foreach (DType dtype in msg.Signature.GetBuffer ()) {
-					if (dtype == DType.Invalid)
-						continue;
-					object arg = reader.ReadValue (dtype);
-					Console.WriteLine (indent + indent + dtype + ": " + arg);
-				}
-			} catch {
-				Console.WriteLine (indent + indent + "monitor is too dumb to decode message body");
+			int argNum = 0;
+			foreach (Signature sig in msg.Signature.GetParts ()) {
+				if (!sig.IsPrimitive)
+					break;
+				object arg = reader.ReadValue (sig[0]);
+				Console.Write (indent + indent + "arg" + argNum + " " + sig + ": ");
+			 	Console.WriteLine (arg);
+				argNum++;
 			}
 		}
 	}
