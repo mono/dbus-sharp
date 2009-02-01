@@ -5,6 +5,7 @@
 using System;
 using NUnit.Framework;
 using NDesk.DBus;
+using System.Collections.Generic;
 
 namespace NDesk.DBus.Tests
 {
@@ -63,6 +64,17 @@ namespace NDesk.DBus.Tests
 			uint expectedTimestamp = 1232989470;
 			Assert.AreEqual (expectedTimestamp, expectedId.UnixTimestamp);
 			Assert.AreEqual (expectedId, entry.GUID);
+		}
+
+		[Test]
+		public void UUIDEntropy ()
+		{
+			int n = 10000;
+			DateTime dt = DateTime.MinValue;
+
+			HashSet<int> hs = new HashSet<int> ();
+			for (int i = 0 ; i != n ; i++)
+				Assert.IsTrue (hs.Add (UUID.Generate (dt).GetHashCode ()));
 		}
 	}
 }
