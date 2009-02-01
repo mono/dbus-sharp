@@ -3,21 +3,39 @@
 // See COPYING for details
 
 using System;
+using System.Text;
+using System.IO;
 using System.Collections.Generic;
 using NDesk.DBus;
 using org.freedesktop.DBus;
 
 class BusMonitor
 {
-	public static void Main (string[] args)
-	{
-		Connection bus;
+	static Connection bus = null;
 
-		if (args.Length >= 1) {
-			string arg = args[0];
+	public static int Main (string[] args)
+	{
+		bus = null;
+		bool readIn = false;
+		bool readOut = false;
+		List<string> rules = new List<string> ();
+
+		for (int i = 0 ; i != args.Length ; i++) {
+			string arg = args[i];
+
+			if (!arg.StartsWith ("--")) {
+				rules.Add (arg);
+				continue;
+			}
 
 			switch (arg)
 			{
+				case "--stdin":
+					readIn = true;
+					break;
+				case "--stdout":
+					readOut = true;
+					break;
 				case "--system":
 					bus = Bus.System;
 					break;
@@ -25,18 +43,19 @@ class BusMonitor
 					bus = Bus.Session;
 					break;
 				default:
-					Console.Error.WriteLine ("Usage: monitor.exe [--system | --session] [watch expressions]");
+					Console.Error.WriteLine ("Usage: monitor.exe [--stdin|--stdout|--system|--session] [watch expressions]");
 					Console.Error.WriteLine ("       If no watch expressions are provided, defaults will be used.");
-					return;
+					return 1;
 			}
-		} else {
-			bus = Bus.Session;
 		}
 
-		if (args.Length > 1) {
+		if (bus == null)
+			bus = Bus.Session;
+
+		if (rules.Count != 0) {
 			//install custom match rules only
-			for (int i = 1 ; i != args.Length ; i++)
-				bus.AddMatch (args[i]);
+			foreach (string rule in rules)
+				bus.AddMatch (rule);
 		} else {
 			//no custom match rules, install the defaults
 			bus.AddMatch (MessageFilter.CreateMatchRule (MessageType.Signal));
@@ -45,6 +64,59 @@ class BusMonitor
 			bus.AddMatch (MessageFilter.CreateMatchRule (MessageType.MethodCall));
 		}
 
+		if (readIn) {
+			ReadIn ();
+			return 0;
+		}
+
+		if (readOut) {
+			ReadOut ();
+			return 0;
+		}
+
+		PrettyPrintOut ();
+		return 0;
+	}
+
+	static void ReadIn ()
+	{
+		TextReader r = Console.In;
+
+		while (true) {
+			Message msg = MessageDumper.ReadMessage (r);
+			if (msg == null)
+				break;
+			PrintMessage (msg);
+			Console.WriteLine ();
+
+			/*
+			byte[] header = MessageDumper.ReadBlock (r);
+			if (header == null)
+				break;
+			PrintHeader (header);
+
+			byte[] body = MessageDumper.ReadBlock (r);
+			PrintBody (header);
+			*/
+		}
+	}
+
+	static void ReadOut ()
+	{
+		TextWriter w = Console.Out;
+
+		DumpConn (bus, w);
+
+		while (true) {
+			Message msg = bus.ReadMessage ();
+			if (msg == null)
+				break;
+			DumpMessage (msg, w);
+		}
+	}
+
+	static void PrettyPrintOut ()
+	{
 		while (true) {
 			Message msg = bus.ReadMessage ();
 			if (msg == null)
@@ -54,9 +126,37 @@ class BusMonitor
 		}
 	}
 
+	static void DumpConn (Connection conn, TextWriter w)
+	{
+		w.WriteLine ("# This is a managed D-Bus protocol dump");
+		w.WriteLine ();
+		w.WriteLine ("# Machine: " + Connection.MachineId);
+		w.WriteLine ("# Connection: " + conn.Id);
+		w.WriteLine ("# Date: " + DateTime.Now.ToString ("F"));
+		w.WriteLine ();
+	}
+
+	static DateTime startTime = DateTime.Now;
+	static void DumpMessage (Message msg, TextWriter w)
+	{
+		w.WriteLine ("# Message: " + msg.Header.Serial);
+
+		TimeSpan delta = DateTime.Now - startTime;
+		startTime = DateTime.Now;
+		w.WriteLine ("# Time delta: " + delta.Ticks);
+
+		w.WriteLine ("# Header");
+		MessageDumper.WriteBlock (msg.GetHeaderData (), w);
+		w.WriteLine ("# Body");
+		MessageDumper.WriteBlock (msg.Body, w);
+
+		w.WriteLine ();
+		w.Flush ();
+	}
+
 	const string indent = "  ";
 
-	internal static void PrintMessage (Message msg)
+	static void PrintMessage (Message msg)
 	{
 		Console.WriteLine ("Message (" + msg.Header.Endianness + " endian, v" + msg.Header.MajorVersion + "):");
 		Console.WriteLine (indent + "Type: " + msg.Header.MessageType);
