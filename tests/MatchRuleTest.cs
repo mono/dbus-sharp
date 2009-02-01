@@ -29,6 +29,7 @@ namespace NDesk.DBus.Tests
 		}
 
 		// argNpath not yet supported
+		/*
 		[Test]
 		[ExpectedException (typeof (FormatException))]
 		public void ParseBadArgsPath ()
@@ -36,6 +37,7 @@ namespace NDesk.DBus.Tests
 			string ruleText = @"arg0path='Foo'";
 			MatchRule.Parse (ruleText);
 		}
+		*/
 
 		[Test]
 		[ExpectedException (typeof (Exception))]
