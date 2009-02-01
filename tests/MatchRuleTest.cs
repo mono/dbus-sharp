@@ -47,6 +47,27 @@ namespace NDesk.DBus.Tests
 			MatchRule.Parse (ruleText);
 		}
 
+		// TODO: Should fail
+		/*
+		[Test]
+		public void ParseArgsPartiallyBad ()
+		{
+			string ruleText = @"arg0='A',arg4='Foo\'";
+			MatchRule.Parse (ruleText);
+		}
+		*/
+
+		// TODO: Should fail
+		/*
+		[Test]
+		//[ExpectedException]
+		public void ParseArgsRepeated ()
+		{
+			string ruleText = @"arg0='A',arg0='A'";
+			MatchRule.Parse (ruleText);
+		}
+		*/
+
 		[Test]
 		public void ParseArgsMaxAllowed ()
 		{
