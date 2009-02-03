@@ -21,5 +21,15 @@ namespace NDesk.DBus.Tests
 			Assert.IsFalse (sig.IsDict);
 			Assert.IsFalse (sig.IsPrimitive);
 		}
+
+		[Test]
+		public void Equality ()
+		{
+			string sigText = "as";
+			Signature a = new Signature (sigText);
+			Signature b = new Signature (sigText);
+
+			Assert.IsTrue (a == b);
+		}
 	}
 }
