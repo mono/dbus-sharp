@@ -28,16 +28,12 @@ namespace NDesk.DBus.Tests
 			Assert.AreEqual (ruleText, rule.ToString ());
 		}
 
-		// argNpath not yet supported
-		/*
 		[Test]
-		[ExpectedException (typeof (FormatException))]
-		public void ParseBadArgsPath ()
+		public void ParsePathArgs ()
 		{
 			string ruleText = @"arg0path='Foo'";
 			MatchRule.Parse (ruleText);
 		}
-		*/
 
 		[Test]
 		[ExpectedException (typeof (Exception))]
