@@ -31,8 +31,9 @@ namespace NDesk.DBus.Tests
 		[Test]
 		public void ParsePathArgs ()
 		{
-			string ruleText = @"arg0path='Foo'";
-			MatchRule.Parse (ruleText);
+			string ruleText = @"arg0='La',arg1path='Foo'";
+			MatchRule rule = MatchRule.Parse (ruleText);
+			Assert.AreEqual (ruleText, rule.ToString ());
 		}
 
 		[Test]
