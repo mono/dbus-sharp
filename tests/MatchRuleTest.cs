@@ -18,13 +18,7 @@ namespace NDesk.DBus.Tests
 			MatchRule rule = MatchRule.Parse (ruleText);
 
 			Assert.AreEqual (null, rule.MessageType);
-			Assert.AreEqual (null, rule.Interface);
-			Assert.AreEqual ("Lala", rule.Member);
-			Assert.AreEqual (null, rule.Path);
-			Assert.AreEqual (null, rule.Sender);
-			Assert.AreEqual (null, rule.Destination);
 			Assert.AreEqual (0, rule.Args.Count);
-
 			Assert.AreEqual (ruleText, rule.ToString ());
 		}
 
@@ -37,11 +31,13 @@ namespace NDesk.DBus.Tests
 		}
 
 		[Test]
-		[ExpectedException (typeof (Exception))]
-		public void ParseBadArgsMaxAllowed ()
+		public void CanonicalOrdering ()
 		{
-			string ruleText = @"arg64='Foo'";
-			MatchRule.Parse (ruleText);
+			string ruleText = @"arg0='La',arg5path='/bar',arg2='Fa',destination='org.ndesk.Recipient',interface='org.ndesk.ITest',arg1path='/foo'";
+			string sortedRuleText = @"interface='org.ndesk.ITest',destination='org.ndesk.Recipient',arg0='La',arg1path='/foo',arg2='Fa',arg5path='/bar'";
+			MatchRule rule = MatchRule.Parse (ruleText);
+			Assert.AreEqual (4, rule.Args.Count);
+			Assert.AreEqual (sortedRuleText, rule.ToString ());
 		}
 
 		// TODO: Should fail
@@ -50,6 +46,17 @@ namespace NDesk.DBus.Tests
 		public void ParseArgsPartiallyBad ()
 		{
 			string ruleText = @"arg0='A',arg4='Foo\'";
+			MatchRule.Parse (ruleText);
+		}
+		*/
+
+		// TODO: Should fail
+		/*
+		[Test]
+		[ExpectedException]
+		public void ParseRepeated ()
+		{
+			string ruleText = @"interface='org.ndesk.ITest',interface='org.ndesk.ITest2'";
 			MatchRule.Parse (ruleText);
 		}
 		*/
@@ -73,21 +80,24 @@ namespace NDesk.DBus.Tests
 		}
 
 		[Test]
+		[ExpectedException]
+		public void ParseArgsMoreThanAllowed ()
+		{
+			string ruleText = @"arg64='Foo'";
+			MatchRule.Parse (ruleText);
+		}
+
+		[Test]
 		public void ParseArgs ()
 		{
 			string ruleText = @"arg5='F,o\'o\\\'\\',arg8=''";
 			MatchRule rule = MatchRule.Parse (ruleText);
 
 			Assert.AreEqual (null, rule.MessageType);
-			Assert.AreEqual (null, rule.Interface);
-			Assert.AreEqual (null, rule.Member);
-			Assert.AreEqual (null, rule.Path);
-			Assert.AreEqual (null, rule.Sender);
-			Assert.AreEqual (null, rule.Destination);
 			Assert.AreEqual (2, rule.Args.Count);
 
-			Assert.AreEqual (@"F,o'o\'\", rule.Args[5]);
-			Assert.AreEqual (@"", rule.Args[8]);
+			//Assert.AreEqual (@"F,o'o\'\", rule.Args[5].Value);
+			//Assert.AreEqual (@"", rule.Args[8].Value);
 
 			Assert.AreEqual (ruleText, rule.ToString ());
 		}
