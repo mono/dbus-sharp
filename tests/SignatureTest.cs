@@ -30,6 +30,9 @@ namespace NDesk.DBus.Tests
 			Signature b = new Signature (sigText);
 
 			Assert.IsTrue (a == b);
+			Assert.IsTrue (a.GetElementSignature () == Signature.StringSig);
+
+			Assert.AreEqual (a + b + Signature.Empty, new Signature ("asas"));
 		}
 
 		[Test]
