@@ -31,5 +31,26 @@ namespace NDesk.DBus.Tests
 
 			Assert.IsTrue (a == b);
 		}
+
+		[Test]
+		public void FixedSize ()
+		{
+			Signature sig;
+
+			sig = new Signature ("s");
+			Assert.IsFalse (sig.IsFixedSize);
+
+			sig = new Signature ("as");
+			Assert.IsFalse (sig.IsFixedSize);
+
+			sig = new Signature ("u");
+			Assert.IsTrue (sig.IsFixedSize);
+
+			sig = new Signature ("u(ub)");
+			Assert.IsTrue (sig.IsFixedSize);
+
+			sig = new Signature ("u(uvb)");
+			Assert.IsFalse (sig.IsFixedSize);
+		}
 	}
 }
