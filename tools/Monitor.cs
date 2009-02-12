@@ -173,16 +173,62 @@ class BusMonitor
 		if (msg.Body != null) {
 			MessageReader reader = new MessageReader (msg);
 
-			//TODO: this needs to be done more intelligently
 			int argNum = 0;
 			foreach (Signature sig in msg.Signature.GetParts ()) {
-				if (!sig.IsPrimitive)
-					break;
-				object arg = reader.ReadValue (sig[0]);
-				Console.Write (indent + indent + "arg" + argNum + " " + sig + ": ");
-			 	Console.WriteLine (arg);
+				//Console.Write (indent + indent + "arg" + argNum + " " + sig + ": ");
+				PrintValue (reader, sig, 1);
+				/*
+				if (sig.IsPrimitive) {
+					object arg = reader.ReadValue (sig[0]);
+					Console.WriteLine (arg);
+				} else {
+					if (sig.IsArray) {
+						//foreach (Signature elemSig in writer.StepInto (sig))
+					}
+					reader.StepOver (sig);
+					Console.WriteLine ("?");
+				}
+				*/
 				argNum++;
 			}
+		}
+	}
+
+	static void PrintValue (MessageReader reader, Signature sig, int depth)
+	{
+		string indent = new String (' ', depth * 2);
+		indent += "  ";
+
+		//Console.Write (indent + indent + "arg" + argNum + " " + sig + ": ");
+		Console.Write (indent);
+		if (sig == Signature.VariantSig) {
+			foreach (Signature elemSig in reader.StepInto (sig)) {
+				Console.WriteLine ("Variant '{0}' (", elemSig);
+				PrintValue (reader, elemSig, depth + 1);
+				Console.WriteLine (indent + ")");
+			}
+		} else if (sig.IsPrimitive) {
+			object arg = reader.ReadValue (sig[0]);
+			Type argType = sig.ToType ();
+			if (sig == Signature.StringSig || sig == Signature.ObjectPathSig)
+				Console.WriteLine ("{0} \"{1}\"", argType.Name, arg);
+			else if (sig == Signature.SignatureSig)
+				Console.WriteLine ("{0} '{1}'", argType.Name, arg);
+			else
+				Console.WriteLine ("{0} {1}", argType.Name, arg);
+		} else if (sig.IsArray) {
+			Console.WriteLine ("Array [");
+			foreach (Signature elemSig in reader.StepInto (sig))
+				PrintValue (reader, elemSig, depth + 1);
+			Console.WriteLine (indent + "]");
+		} else if (sig.IsStruct) {
+			Console.WriteLine ("Struct {");
+			foreach (Signature elemSig in reader.StepInto (sig))
+				PrintValue (reader, elemSig, depth + 1);
+			Console.WriteLine (indent + "}");
+		} else {
+			reader.StepOver (sig);
+			Console.WriteLine ("'{0}'?", sig);
 		}
 	}
 }
