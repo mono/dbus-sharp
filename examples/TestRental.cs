@@ -43,6 +43,10 @@ public class ManagedDBusTestRental
 
 			DMethodInfo dmi = idcp.GetMethod ("DemoProx", "SayRepeatedly");
 
+			DArgumentInfo[] fields = idcp.GetFields ("DemoProx");
+			foreach (DArgumentInfo field in fields)
+				Console.WriteLine("Field: " + field.Name);
+
 			//DynamicMethod dm = new DynamicMethod (dmi.Name, typeof(void), new Type[] { typeof(object), typeof(int), typeof(string) }, typeof(DemoBase));
 			//ILGenerator ilg = dm.GetILGenerator ();
 			//dmi.Implement (ilg);
@@ -135,6 +139,8 @@ public delegate int SayRepeatedlyHandler (int count, string str);
 [Interface ("org.ndesk.CodeProvider")]
 public interface ICodeProvider
 {
+	//DTypeInfo GetInterface (string iface);
+	DArgumentInfo[] GetFields (string iface);
 	DMethodInfo GetMethod (string iface, string name);
 }
 
@@ -229,6 +235,7 @@ public struct DTypeInfo : ICodeProvider2
 	public DTypeInfo(string name)
 	{
 		this.Name = name;
+		//this.Fields = new DArgumentInfo[0];
 	}
 
 	public Type ToType()
@@ -242,6 +249,8 @@ public struct DTypeInfo : ICodeProvider2
 	public string Name;
 	//public DMethodInfo[] Methods;
 
+	//public DArgumentInfo[] Fields;
+
 	public DMethodInfo GetMethod (string name)
 	{
 		throw new NotImplementedException();
@@ -250,6 +259,20 @@ public struct DTypeInfo : ICodeProvider2
 
 public class DCodeProvider : ICodeProvider
 {
+	//public DTypeInfo GetInterface (string iface)
+	public DArgumentInfo[] GetFields (string iface)
+	{
+		DTypeInfo dti = new DTypeInfo (iface);
+		Type declType = dti.ToType();
+
+		List<DArgumentInfo> fields = new List<DArgumentInfo>();
+		foreach (FieldInfo fi in declType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+			fields.Add (new DArgumentInfo(fi.Name, new DTypeInfo(fi.FieldType.FullName)));
+
+		//return dti;
+		return fields.ToArray();
+	}
+
 	public DMethodInfo GetMethod (string iface, string name)
 	{
 		DMethodInfo dmi = new DMethodInfo ();
@@ -309,8 +332,10 @@ public interface IDemo : IDemoOne, IDemoTwo
 
 public abstract class DemoProx : DemoBase
 {
+	public int cache = 0;
 	public virtual int SayRepeatedly (int count, string str)
 	{
+		Say2(cache.ToString());
 		for (int i = 0 ; i != count ; i++)
 			//Say2("Woo! " + str);
 			Say2(str);
