@@ -138,6 +138,12 @@ public interface ICodeProvider
 	DMethodInfo GetMethod (string iface, string name);
 }
 
+[Interface ("org.ndesk.CodeProvider2")]
+public interface ICodeProvider2
+{
+	DMethodInfo GetMethod (string name);
+}
+
 public struct DMethodBody
 {
 	public string[] Locals;
@@ -157,7 +163,7 @@ public struct DMethodBody
 public struct DMethodInfo
 {
 	public string Name;
-	//public DTypeInfo DeclaringType;
+	public DTypeInfo DeclaringInterface;
 	public DTypeInfo[] Parameters;
 	//public DArgumentInfo[] Arguments;
 	public DTypeInfo ReturnType;
@@ -218,7 +224,7 @@ public struct DArgumentInfo
 	public DArgumentDirection Direction;
 }
 
-public struct DTypeInfo
+public struct DTypeInfo : ICodeProvider2
 {
 	public DTypeInfo(string name)
 	{
@@ -235,6 +241,11 @@ public struct DTypeInfo
 
 	public string Name;
 	//public DMethodInfo[] Methods;
+
+	public DMethodInfo GetMethod (string name)
+	{
+		throw new NotImplementedException();
+	}
 }
 
 public class DCodeProvider : ICodeProvider
@@ -244,9 +255,9 @@ public class DCodeProvider : ICodeProvider
 		DMethodInfo dmi = new DMethodInfo ();
 
 		dmi.Name = name;
-		//dmi.Code = new byte[0];
+		dmi.DeclaringInterface = new DTypeInfo(iface);
 
-		Type declType = typeof(DemoProx);
+		Type declType = dmi.DeclaringInterface.ToType();
 		MethodInfo mi = declType.GetMethod(name);
 
 		List<string> locals = new List<string>();
