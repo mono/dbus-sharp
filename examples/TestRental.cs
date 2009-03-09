@@ -41,18 +41,16 @@ public class ManagedDBusTestRental
 
 			ICodeProvider idcp = bus.GetObject<ICodeProvider> (bus_name, cppath);
 
-			DMethodInfo dmi = idcp.GetMethod("DemoProx", "SayRepeatedly");
+			DMethodInfo dmi = idcp.GetMethod ("DemoProx", "SayRepeatedly");
 
-			DynamicMethod dm = new DynamicMethod (dmi.Name, typeof(void), new Type[] { typeof(object), typeof(int), typeof(string) }, typeof(DemoBase));
-			ILGenerator ilg = dm.GetILGenerator();
+			//DynamicMethod dm = new DynamicMethod (dmi.Name, typeof(void), new Type[] { typeof(object), typeof(int), typeof(string) }, typeof(DemoBase));
+			//ILGenerator ilg = dm.GetILGenerator ();
+			//dmi.Implement (ilg);
 
-			dmi.DeclareLocals(ilg);
+			DynamicMethod dm = dmi.GetDM ();
 
-			for (int i = 0 ; i != dmi.Code.Length ; i++)
-				dmi.Code[i].Emit(ilg);
-
-			SayRepeatedlyHandler cb = (SayRepeatedlyHandler)dm.CreateDelegate(typeof(SayRepeatedlyHandler), demo);
-			cb(12, "Works!");
+			SayRepeatedlyHandler cb = (SayRepeatedlyHandler)dm.CreateDelegate (typeof (SayRepeatedlyHandler), demo);
+			cb (12, "Works!");
 
 			/*
 			for (int i = 0 ; i != dmi.Code.Length ; i++) {
@@ -138,10 +136,8 @@ public interface ICodeProvider
 	DMethodInfo GetMethod (string iface, string name);
 }
 
-public struct DMethodInfo
+public struct DMethodBody
 {
-	public string Name;
-	//public byte[] Code;
 	public string[] Locals;
 	public ILReader2.ILOp[] Code;
 
@@ -156,8 +152,85 @@ public struct DMethodInfo
 	}
 }
 
+public struct DMethodInfo
+{
+	public string Name;
+	//public DTypeInfo DeclaringType;
+	public DTypeInfo[] Parameters;
+	//public DArgumentInfo[] Arguments;
+	public DTypeInfo ReturnType;
+	public DMethodBody Body;
+
+	public void Implement(ILGenerator ilg)
+	{
+		DMethodBody body = Body;
+
+		body.DeclareLocals(ilg);
+
+		for (int i = 0 ; i != body.Code.Length ; i++) {
+			if (!body.Code[i].Emit(ilg))
+				throw new Exception(String.Format("Code gen failure at i={0} {1}", i, body.Code[i].opCode));
+		}
+	}
+
+	public DynamicMethod GetDM ()
+	{
+		List<Type> parms = new List<Type>();
+		parms.Add(typeof(object));
+		foreach (DTypeInfo dti in Parameters)
+			parms.Add(dti.ToType());
+
+		DynamicMethod dm = new DynamicMethod (Name, ReturnType.ToType(), parms.ToArray(), typeof(DemoBase));
+
+		ILGenerator ilg = dm.GetILGenerator();
+		Implement(ilg);
+		return dm;
+	}
+}
+
+public enum DArgumentDirection
+{
+	In,
+	Out,
+}
+
+public struct DArgumentInfo
+{
+	public DArgumentInfo(DTypeInfo argType) : this(String.Empty, argType)
+	{
+	}
+
+	public DArgumentInfo(string name, DTypeInfo argType) : this(name, argType, DArgumentDirection.In)
+	{
+	}
+
+	public DArgumentInfo(string name, DTypeInfo argType, DArgumentDirection direction)
+	{
+		this.Name = name;
+		this.ArgType = argType;
+		this.Direction = direction;
+	}
+
+	public string Name;
+	public DTypeInfo ArgType;
+	public DArgumentDirection Direction;
+}
+
 public struct DTypeInfo
 {
+	public DTypeInfo(string name)
+	{
+		this.Name = name;
+	}
+
+	public Type ToType()
+	{
+		Type t;
+		if (!ILReader2.TryGetType(Name, out t))
+			return null;
+		return t;
+	}
+
 	public string Name;
 	//public DMethodInfo[] Methods;
 }
@@ -178,10 +251,17 @@ public class DCodeProvider : ICodeProvider
 		MethodBody body = mi.GetMethodBody ();
 		foreach (LocalVariableInfo lvar in body.LocalVariables)
 			locals.Add(lvar.LocalType.FullName);
-		dmi.Locals = locals.ToArray();
+		dmi.Body.Locals = locals.ToArray();
+
+		List<DTypeInfo> parms = new List<DTypeInfo>();
+		foreach (ParameterInfo parm in mi.GetParameters())
+			parms.Add(new DTypeInfo(parm.ParameterType.FullName));
+		dmi.Parameters = parms.ToArray();
+
+		dmi.ReturnType = new DTypeInfo(mi.ReturnType.FullName);
 
 		ILReader2 ilr = new ILReader2(mi);
-		dmi.Code = ilr.Iterate();
+		dmi.Body.Code = ilr.Iterate();
 
 		return dmi;
 	}
