@@ -50,7 +50,9 @@ public class ManagedDBusTestRental
 			DynamicMethod dm = dmi.GetDM ();
 
 			SayRepeatedlyHandler cb = (SayRepeatedlyHandler)dm.CreateDelegate (typeof (SayRepeatedlyHandler), demo);
-			cb (12, "Works!");
+			int retVal;
+			retVal = cb (12, "Works!");
+			Console.WriteLine("retVal: " + retVal);
 
 			/*
 			for (int i = 0 ; i != dmi.Code.Length ; i++) {
@@ -128,7 +130,7 @@ public class ManagedDBusTestRental
 	}
 }
 
-public delegate void SayRepeatedlyHandler (int count, string str);
+public delegate int SayRepeatedlyHandler (int count, string str);
 
 [Interface ("org.ndesk.CodeProvider")]
 public interface ICodeProvider
@@ -296,7 +298,7 @@ public interface IDemo : IDemoOne, IDemoTwo
 
 public abstract class DemoProx : DemoBase
 {
-	public virtual void SayRepeatedly (int count, string str)
+	public virtual int SayRepeatedly (int count, string str)
 	{
 		for (int i = 0 ; i != count ; i++)
 			//Say2("Woo! " + str);
@@ -313,6 +315,7 @@ public abstract class DemoProx : DemoBase
 			Say2(fa);
 		}
 		*/
+		return 12;
 	}
 }
 
