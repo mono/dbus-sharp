@@ -28,7 +28,8 @@ public class ManagedDBusTestExport
 				bus.Iterate ();
 		} else {
 			//import a remote to a local proxy
-			demo = bus.GetObject<IDemo> (bus_name, path);
+			//demo = bus.GetObject<IDemo> (bus_name, path);
+			demo = bus.GetObject<DemoProx> (bus_name, path);
 		}
 
 		Console.WriteLine ();
@@ -72,6 +73,10 @@ public class ManagedDBusTestExport
 		Console.WriteLine("SomeProp: " + demo.SomeProp);
 		demo.SomeProp = 321;
 
+		DemoProx demoProx = demo as DemoProx;
+		if (demoProx != null)
+			demoProx.SayRepeatedly(5, "Repetition");
+
 		demo.ThrowSomeException ();
 	}
 
@@ -111,6 +116,15 @@ public interface IDemoTwo
 
 public interface IDemo : IDemoOne, IDemoTwo
 {
+}
+
+public abstract class DemoProx : DemoBase
+{
+	public virtual void SayRepeatedly (int count, string str)
+	{
+		for (int i = 0 ; i != count ; i++)
+			Say2(str);
+	}
 }
 
 public class Demo : DemoBase
