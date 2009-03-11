@@ -108,7 +108,7 @@ class BusMonitor
 		DumpConn (bus, w);
 
 		while (true) {
-			Message msg = bus.ReadMessage ();
+			Message msg = bus.Transport.ReadMessage ();
 			if (msg == null)
 				break;
 			DumpMessage (msg, w);
@@ -118,7 +118,7 @@ class BusMonitor
 	static void PrettyPrintOut ()
 	{
 		while (true) {
-			Message msg = bus.ReadMessage ();
+			Message msg = bus.Transport.ReadMessage ();
 			if (msg == null)
 				break;
 			PrintMessage (msg);
