@@ -56,13 +56,11 @@ public class ManagedDBusTestExport
 
 		demo.SayEnum (DemoEnum.Bar, DemoEnum.Foo);
 
-		/*
 		uint n;
 		string ostr;
 		demo.WithOutParameters (out n, "21", out ostr);
 		Console.WriteLine ("n: " + n);
 		Console.WriteLine ("ostr: " + ostr);
-		*/
 
 		/*
 		IDemoOne[] objs = demo.GetObjArr ();
