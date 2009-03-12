@@ -62,6 +62,10 @@ public class ManagedDBusTestExport
 		Console.WriteLine ("n: " + n);
 		Console.WriteLine ("ostr: " + ostr);
 
+		uint[] a1, a2, a3;
+		demo.WithOutParameters2 (out a1, out a2, out a3);
+		Console.WriteLine ("oparam2: " + a2[1]);
+
 		/*
 		IDemoOne[] objs = demo.GetObjArr ();
 		foreach (IDemoOne obj in objs)
@@ -100,6 +104,7 @@ public interface IDemoOne
 	object GetSomeVariant ();
 	void ThrowSomeException ();
 	void WithOutParameters (out uint n, string str, out string ostr);
+	void WithOutParameters2 (out uint[] a1, out uint[] a2, out uint[] a3);
 	IDemoOne[] GetEmptyObjArr ();
 	IDemoOne[] GetObjArr ();
 	int SomeProp { get; set; }
@@ -193,6 +198,13 @@ public class DemoBase : IDemo
 	{
 		n = UInt32.Parse (str);
 		ostr = "." + str + ".";
+	}
+
+	public void WithOutParameters2 (out uint[] a1, out uint[] a2, out uint[] a3)
+	{
+		a1 = new uint[] { };
+		a2 = new uint[] { 21, 23, 16 };
+		a3 = new uint[] { 21, 23 };
 	}
 
 	public IDemoOne[] GetEmptyObjArr ()
