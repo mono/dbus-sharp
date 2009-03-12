@@ -221,6 +221,11 @@ class BusMonitor
 			foreach (Signature elemSig in reader.StepInto (sig))
 				PrintValue (reader, elemSig, depth + 1);
 			Console.WriteLine (indent + "]");
+		} else if (sig.IsDictEntry) {
+			Console.WriteLine ("DictEntry {");
+			foreach (Signature elemSig in reader.StepInto (sig))
+				PrintValue (reader, elemSig, depth + 1);
+			Console.WriteLine (indent + "}");
 		} else if (sig.IsStruct) {
 			Console.WriteLine ("Struct {");
 			foreach (Signature elemSig in reader.StepInto (sig))
