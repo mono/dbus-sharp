@@ -71,6 +71,14 @@ public class ManagedDBusTestExport
 		demo.GetPresences (contacts, out presence);
 		Console.WriteLine ("pres: " + presence[2].Status);
 
+		// We currently don't support complex variant values.
+		// However we do support skipping over them, returning null without an error.
+		MyTuple2 cpx = new MyTuple2 ();
+		cpx.A = "a";
+		cpx.B = "b";
+		cpx.C = new Dictionary<int,MyTuple> ();
+		cpx.C[3] = new MyTuple("foo", "bar");
+		demo.ComplexAsVariant (cpx, 12);
 
 		/*
 		IDemoOne[] objs = demo.GetObjArr ();
@@ -112,6 +120,8 @@ public interface IDemoOne
 	void WithOutParameters (out uint n, string str, out string ostr);
 	void WithOutParameters2 (out uint[] a1, out uint[] a2, out uint[] a3);
 	void GetPresences (uint[] @contacts, out IDictionary<uint,SimplePresence> @presence);
+	void ComplexAsVariant (object v, int num);
+
 	IDemoOne[] GetEmptyObjArr ();
 	IDemoOne[] GetObjArr ();
 	int SomeProp { get; set; }
@@ -221,6 +231,13 @@ public class DemoBase : IDemo
 		presence = presences;
 	}
 
+	public void ComplexAsVariant (object v, int num)
+	{
+		Console.WriteLine ("v: " + v);
+		Console.WriteLine ("v null? " + (v == null));
+		Console.WriteLine ("num: " + num);
+	}
+
 	public IDemoOne[] GetEmptyObjArr ()
 	{
 		return new Demo[] {};
@@ -250,8 +267,21 @@ public enum DemoEnum : byte
 
 public struct MyTuple
 {
+	public MyTuple (string a, string b)
+	{
+		A = a;
+		B = b;
+	}
+
 	public string A;
 	public string B;
+}
+
+public struct MyTuple2
+{
+	public string A;
+	public string B;
+	public IDictionary<int,MyTuple> C;
 }
 
 public delegate void SomeEventHandler (string arg1, object arg2, double arg3, MyTuple mt);
