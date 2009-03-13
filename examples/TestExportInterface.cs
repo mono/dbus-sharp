@@ -66,6 +66,12 @@ public class ManagedDBusTestExport
 		demo.WithOutParameters2 (out a1, out a2, out a3);
 		Console.WriteLine ("oparam2: " + a2[1]);
 
+		uint[] @contacts = new uint[] { 2 };
+		IDictionary<uint,SimplePresence> presence;
+		demo.GetPresences (contacts, out presence);
+		Console.WriteLine ("pres: " + presence[2].Status);
+
+
 		/*
 		IDemoOne[] objs = demo.GetObjArr ();
 		foreach (IDemoOne obj in objs)
@@ -105,6 +111,7 @@ public interface IDemoOne
 	void ThrowSomeException ();
 	void WithOutParameters (out uint n, string str, out string ostr);
 	void WithOutParameters2 (out uint[] a1, out uint[] a2, out uint[] a3);
+	void GetPresences (uint[] @contacts, out IDictionary<uint,SimplePresence> @presence);
 	IDemoOne[] GetEmptyObjArr ();
 	IDemoOne[] GetObjArr ();
 	int SomeProp { get; set; }
@@ -207,6 +214,13 @@ public class DemoBase : IDemo
 		a3 = new uint[] { 21, 23 };
 	}
 
+	public void GetPresences (uint[] @contacts, out IDictionary<uint,SimplePresence> @presence)
+	{
+		Dictionary<uint,SimplePresence> presences = new Dictionary<uint,SimplePresence>();
+		presences[2] = new SimplePresence { Type = ConnectionPresenceType.Offline, Status = "offline", StatusMessage = "" };
+		presence = presences;
+	}
+
 	public IDemoOne[] GetEmptyObjArr ()
 	{
 		return new Demo[] {};
@@ -241,3 +255,16 @@ public struct MyTuple
 }
 
 public delegate void SomeEventHandler (string arg1, object arg2, double arg3, MyTuple mt);
+
+public enum ConnectionPresenceType : uint
+{
+	Unset = 0, Offline = 1, Available = 2, Away = 3, ExtendedAway = 4, Hidden = 5, Busy = 6, Unknown = 7, Error = 8, 
+}
+
+public struct SimplePresence
+{
+	public ConnectionPresenceType Type;
+	public string Status;
+	public string StatusMessage;
+}
+
