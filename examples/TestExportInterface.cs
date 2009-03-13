@@ -71,14 +71,14 @@ public class ManagedDBusTestExport
 		demo.GetPresences (contacts, out presence);
 		Console.WriteLine ("pres: " + presence[2].Status);
 
-		// We currently don't support complex variant values.
-		// However we do support skipping over them, returning null without an error.
 		MyTuple2 cpx = new MyTuple2 ();
 		cpx.A = "a";
 		cpx.B = "b";
 		cpx.C = new Dictionary<int,MyTuple> ();
 		cpx.C[3] = new MyTuple("foo", "bar");
-		demo.ComplexAsVariant (cpx, 12);
+		object cpxRet = demo.ComplexAsVariant (cpx, 12);
+		MyTuple2 mt2ret = (MyTuple2)Convert.ChangeType (cpxRet, typeof (MyTuple2));
+		Console.WriteLine ("mt2ret.C[3].B " + mt2ret.C[3].B);
 
 		/*
 		IDemoOne[] objs = demo.GetObjArr ();
@@ -120,7 +120,7 @@ public interface IDemoOne
 	void WithOutParameters (out uint n, string str, out string ostr);
 	void WithOutParameters2 (out uint[] a1, out uint[] a2, out uint[] a3);
 	void GetPresences (uint[] @contacts, out IDictionary<uint,SimplePresence> @presence);
-	void ComplexAsVariant (object v, int num);
+	object ComplexAsVariant (object v, int num);
 
 	IDemoOne[] GetEmptyObjArr ();
 	IDemoOne[] GetObjArr ();
@@ -231,11 +231,16 @@ public class DemoBase : IDemo
 		presence = presences;
 	}
 
-	public void ComplexAsVariant (object v, int num)
+	public object ComplexAsVariant (object v, int num)
 	{
 		Console.WriteLine ("v: " + v);
 		Console.WriteLine ("v null? " + (v == null));
+
+		MyTuple2 mt2 = (MyTuple2)Convert.ChangeType (v, typeof (MyTuple2));
+		Console.WriteLine ("mt2.C[3].B " + mt2.C[3].B);
 		Console.WriteLine ("num: " + num);
+
+		return v;
 	}
 
 	public IDemoOne[] GetEmptyObjArr ()
