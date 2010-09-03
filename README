@@ -1,10 +1,12 @@
 D-Bus for .NET
 ==============
 
-This is a C# implementation of D-Bus. It's often referred to as "managed
-D-Bus" to avoid confusion with existing bindings (which wrap libdbus).
+This is a fork of ndesk-dbus, which is a C# implementation of D-Bus. It's
+often referred to as "managed D-Bus" to avoid confusion with existing
+bindings (which wrap libdbus).
 
-See http://www.ndesk.org/DBusSharp
+See http://www.github.com/mono/dbus-sharp for our fork
+See http://www.ndesk.org/DBusSharp for Alp Toker's original project
 
 D-Bus is an inter-process communication framework that lets applications
 interface with the system event bus as well as allowing them to talk to
@@ -24,7 +26,8 @@ toolkit or license. The source code is MIT X11 licensed (Free
 Software/Open Source), allowing integration into other projects with
 very few restrictions.
 
-The code was written and is maintained by Alp Toker <alp@atoker.com>
+The code was written by Alp Toker <alp@atoker.com> and others, and is
+maintained by the dbus-sharp team.
 
 It is a clean-room implementation based on the D-Bus Specification
 Version 0.11 and study of the wire protocol of existing tools.
@@ -34,4 +37,4 @@ supporting the 2.0 profile. Backward compatibility with 1.0 will not be
 a consideration.
 
 -- 
-Alp Toker <alp@atoker.com>
+Alp Toker <alp@atoker.com> and others
