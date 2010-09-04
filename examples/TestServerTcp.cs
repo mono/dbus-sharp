@@ -3,8 +3,8 @@
 // See COPYING for details
 
 using System;
-using NDesk.DBus;
-using NDesk.DBus.Transports;
+using DBus;
+using DBus.Transports;
 using org.freedesktop.DBus;
 
 using System.IO;

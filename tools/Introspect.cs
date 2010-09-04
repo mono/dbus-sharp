@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using NDesk.DBus;
+using DBus;
 using Schemas;
 
 public class test

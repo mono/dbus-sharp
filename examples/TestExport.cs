@@ -4,7 +4,7 @@
 
 using System;
 using System.Collections.Generic;
-using NDesk.DBus;
+using DBus;
 using org.freedesktop.DBus;
 
 //NOTE: MarshalByRefObject use is not recommended in new code
@@ -34,7 +34,7 @@ public class ManagedDBusTestExport
 		}
 
 		demo.Say ("Hello world!");
-		demo.Say ("Sibérie");
+		demo.Say ("SibÃ©rie");
 		demo.Say (21);
 		demo.SayByteArray (new byte[] {0, 2, 1}, "test string");
 		demo.SayByteEnumArray (new BEnum[] {BEnum.Zero, BEnum.Two, BEnum.One}, "test string two");

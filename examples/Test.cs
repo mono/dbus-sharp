@@ -3,7 +3,7 @@
 // See COPYING for details
 
 using System;
-using NDesk.DBus;
+using DBus;
 using org.freedesktop.DBus;
 
 public class ManagedDBusTest

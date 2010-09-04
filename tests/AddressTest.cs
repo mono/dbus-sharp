@@ -4,10 +4,10 @@
 
 using System;
 using NUnit.Framework;
-using NDesk.DBus;
+using DBus;
 using System.Collections.Generic;
 
-namespace NDesk.DBus.Tests
+namespace DBus.Tests
 {
 	[TestFixture]
 	public class AddressTest

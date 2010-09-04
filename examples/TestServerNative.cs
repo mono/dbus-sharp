@@ -3,7 +3,7 @@
 // See COPYING for details
 
 using System;
-using NDesk.DBus;
+using DBus;
 using org.freedesktop.DBus;
 
 using System.IO;
@@ -12,7 +12,7 @@ using Mono.Unix;
 using System.Threading;
 
 using System.Text;
-using NDesk.DBus.Transports;
+using DBus.Transports;
 
 public class TestServerNative
 {

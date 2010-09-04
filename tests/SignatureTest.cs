@@ -4,9 +4,9 @@
 
 using System;
 using NUnit.Framework;
-using NDesk.DBus;
+using DBus;
 
-namespace NDesk.DBus.Tests
+namespace DBus.Tests
 {
 	[TestFixture]
 	public class SignatureTest

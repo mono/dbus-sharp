@@ -5,10 +5,10 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using NDesk.DBus;
-using NDesk.DBus.Authentication;
+using DBus;
+using DBus.Authentication;
 
-namespace NDesk.DBus.Tests
+namespace DBus.Tests
 {
 	[TestFixture]
 	public class AuthenticationTest
