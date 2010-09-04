@@ -4,8 +4,8 @@ exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 session_bus_services_dir=${datadir}/dbus-1/services
 
-Name: NDesk.DBus
+Name: Managed DBus
 Description: Managed D-Bus IPC protocol library and CLR binding
 Version: @VERSION@
-URL: http://www.ndesk.org/DBusSharp
-Libs: -r:${libdir}/mono/@PACKAGE@-@API_VERSION@/NDesk.DBus.dll
+URL: http://mono.github.com/dbus-sharp/
+Libs: -r:${libdir}/mono/@PACKAGE@-@API_VERSION@/dbus-sharp.dll
