@@ -25,7 +25,7 @@ namespace DBus.Tests
 		[Test]
 		public void ParsePathArgs ()
 		{
-			string ruleText = @"arg0='La',arg1path='Foo'";
+			string ruleText = @"arg0='La',arg1path='/Foo'";
 			MatchRule rule = MatchRule.Parse (ruleText);
 			Assert.AreEqual (ruleText, rule.ToString ());
 		}

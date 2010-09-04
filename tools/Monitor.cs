@@ -166,7 +166,7 @@ class BusMonitor
 		//foreach (HeaderField hf in msg.HeaderFields)
 		//	Console.WriteLine (indent + hf.Code + ": " + hf.Value);
 		Console.WriteLine (indent + "Header Fields:");
-		foreach (KeyValuePair<FieldCode,object> field in msg.Header.Fields)
+		foreach (KeyValuePair<byte,object> field in msg.Header.Fields)
 			Console.WriteLine (indent + indent + field.Key + ": " + field.Value);
 
 		Console.WriteLine (indent + "Body (" + msg.Header.Length + " bytes):");

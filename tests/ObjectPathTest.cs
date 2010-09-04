@@ -1,4 +1,5 @@
 // Copyright 2009 Alp Toker <alp@atoker.com>
+// Copyright 2010 Alan McGovern <alan.mcgovern@gmail.com>
 // This software is made available under the MIT License
 // See COPYING for details
 
@@ -11,6 +12,48 @@ namespace DBus.Tests
 	[TestFixture]
 	public class ObjectPathTest
 	{
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		public void InvalidStartingCharacter ()
+		{
+			// Paths must start with "/"
+			new ObjectPath ("no_starting_slash");
+		}
+
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		public void InvalidEndingCharacter ()
+		{
+			// Paths must not end with "/"
+			new ObjectPath ("/ends_with_slash/");
+		}
+		
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		public void InvalidCharacters ()
+		{
+			// Paths must be in the range "[A-Z][a-z][0-9]_"
+			new ObjectPath ("/?valid/path/invalid?/character.^");
+		}
+		
+		[Test]
+		public void MultipleSequentialSlashes ()
+		{
+			// Multiple sequential '/' chars are not allowed
+			new ObjectPath ("/test//fail");
+		}
+		
+		[Test]
+		public void ConstructorTest ()
+		{
+			var x = new ObjectPath ("/");
+			Assert.AreEqual (x.ToString (), "/", "#1");
+			Assert.AreEqual (x, ObjectPath.Root, "#2");
+			
+			x = new ObjectPath ("/this/01234567890/__Test__");
+			Assert.AreEqual ("/this/01234567890/__Test__", x.ToString (), "#3");
+		}
+		
 		[Test]
 		public void Equality ()
 		{
@@ -29,10 +72,17 @@ namespace DBus.Tests
 		}
 
 		[Test]
-		[ExpectedException]
+		[ExpectedException (typeof (ArgumentNullException))]
 		public void NullConstructor ()
 		{
 			new ObjectPath (null);
+		}
+		
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		public void EmptyStringConstructor ()
+		{
+			new ObjectPath ("");
 		}
 	}
 }
