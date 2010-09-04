@@ -6,7 +6,7 @@ TESTS=AddressTest.cs AuthenticationTest.cs MatchRuleTest.cs ObjectPathTest.cs Si
 TESTLIB=dbus-sharp-tests.dll
 
 dbus-sharp-tests.dll: $(TESTS)
-	$(CSC) -debug -t:library -out:$@ -r:dbus-sharp.dll -keyfile:../ndesk.snk -pkg:mono-nunit $(TESTS)
+	$(CSC) -debug -t:library -out:$@ -r:dbus-sharp.dll -keyfile:../dbus-sharp.snk -pkg:mono-nunit $(TESTS)
 
 .PHONY: setup
 setup:
