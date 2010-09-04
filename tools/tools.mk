@@ -4,5 +4,5 @@ CSC=gmcs
 CSFLAGS=-debug
 
 dbus-monitor.exe: Monitor.cs
-	$(CSC) $(CSFLAGS) -keyfile:../ndesk.snk -r:../src/NDesk.DBus.dll -out:$@ $^
+	$(CSC) $(CSFLAGS) -keyfile:../dbus-sharp.snk -r:../src/NDesk.DBus.dll -out:$@ $^
 
