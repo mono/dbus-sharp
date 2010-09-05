@@ -19,3 +19,5 @@ INSTALL
 install-sh
 missing
 src/AssemblyInfo.cs
+xdb.il
+xdb.s
