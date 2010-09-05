@@ -30,17 +30,18 @@ namespace DBus.Tests
 
 		[Test]
 		[ExpectedException (typeof (ArgumentException))]
+		public void MultipleConsecutiveSlash ()
+		{
+			// Paths must not contains consecutive "/"
+			new ObjectPath ("/foo//bar");
+		}
+
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
 		public void InvalidCharacters ()
 		{
 			// Paths must be in the range "[A-Z][a-z][0-9]_"
 			new ObjectPath ("/?valid/path/invalid?/character.^");
-		}
-
-		[Test]
-		public void MultipleSequentialSlashes ()
-		{
-			// Multiple sequential '/' chars are not allowed
-			new ObjectPath ("/test//fail");
 		}
 
 		[Test]
