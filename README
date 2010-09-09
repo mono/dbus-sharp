@@ -5,7 +5,11 @@ This is a fork of ndesk-dbus, which is a C# implementation of D-Bus. It's
 often referred to as "managed D-Bus" to avoid confusion with existing
 bindings (which wrap libdbus).
 
-See http://www.github.com/mono/dbus-sharp for our fork
+See http://mono.github.com/dbus-sharp/ for our fork
+    - Tarball download: http://github.com/mono/dbus-sharp/downloads
+    - GitHub repository: http://www.github.com/mono/dbus-sharp
+    - Reporting bugs: http://github.com/mono/dbus-sharp/issues
+
 See http://www.ndesk.org/DBusSharp for Alp Toker's original project
 
 D-Bus is an inter-process communication framework that lets applications
