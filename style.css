@@ -1,0 +1,60 @@
+body {
+	background-color: white;
+	font-family: Sans-serif;
+	color: black;
+}
+
+#container {
+	width: 65%;
+	margin: auto;
+}
+
+#header {
+	border-bottom: 1px solid #2e3436;
+}
+
+#main {
+	border-top: 1px solid #babdb6;
+	border-bottom: 1px solid #2e3436;
+	padding: 1.5em 1em 1.5em 1em;
+	text-align: justify;
+	line-height: 135%;
+}
+
+#main h3 {
+	color: #2e3436;
+	font-weight: bold;
+	font-size: large;
+	margin-left: 1em;
+	padding-left: 1ex;
+	margin-top: 3ex;
+	border-left: 1px solid #2e3436;
+}
+
+#footer {
+	color: #555753;
+	border-top: 1px solid #babdb6;
+	padding-top: 1em;
+}
+
+#footer p {
+	text-indent: 2em;
+}
+
+.title {
+	color: #2e3436;
+	font-family: 'LeagueGothicRegular', serif;
+	letter-spacing: 0;
+    font-style: normal;
+    text-decoration: none;
+	font-weight: normal;
+	font-size: xx-large;
+}
+
+@font-face {
+	font-family: 'DroidSansRegular';
+	src: url('DroidSans-webfont.eot');
+	src: local('☺'), url('DroidSans-webfont.woff') format('woff'), url('DroidSans-webfont.ttf') format('truetype'), url('DroidSans-webfont.svg#webfontKYIQSBQk') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
