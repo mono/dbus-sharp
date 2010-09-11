@@ -5,6 +5,7 @@
 using System;
 using NUnit.Framework;
 using DBus;
+using System.Linq;
 
 namespace DBus.Tests
 {
@@ -12,7 +13,66 @@ namespace DBus.Tests
 	public class SignatureTest
 	{
 		[Test]
-		public void Parse ()
+		[ExpectedException (typeof (ArgumentNullException))]
+		public void Parse_NullString ()
+		{
+			new Signature ((string) null);
+		}
+		
+		[Test]
+		[ExpectedException (typeof (ArgumentNullException))]
+		public void Parse_NullArray ()
+		{
+			new Signature ((DType []) null);
+		}
+		
+		[Test]
+		public void Parse_Empty ()
+		{
+			var x = new Signature ("");
+			Assert.AreEqual (Signature.Empty, x, "#1");
+		}
+		
+		[Test]
+		public void ParseStruct ()
+		{
+			var sig = new Signature ("(iu)");
+			Assert.IsTrue (sig.IsStruct, "#1");
+			
+			var elements = sig.GetFieldSignatures ().ToArray ();
+			Assert.AreEqual (2, elements.Length, "#2");
+			Assert.AreEqual (Signature.Int32Sig, elements [0], "#3");
+			Assert.AreEqual (Signature.UInt32Sig, elements [1], "#4");
+		}
+		
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		public void ParseInvalid_TypeCode ()
+		{
+			// Use an invalid type code
+			new Signature ("z");
+		}
+		
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		[Ignore ("Not implemented yet")]
+		public void ParseInvalid_MissingClosingBrace ()
+		{
+			// Use an invalid type code
+			new Signature ("(i");
+		}
+		
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		[Ignore ("Not implemented yet")]
+		public void ParseInvalid_MissingOpeningBrace ()
+		{
+			// Use an invalid type code
+			new Signature ("i)");
+		}
+		
+		[Test]
+		public void Parse_ArrayOfString ()
 		{
 			string sigText = "as";
 			Signature sig = new Signature (sigText);
