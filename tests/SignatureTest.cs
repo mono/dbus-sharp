@@ -115,5 +115,53 @@ namespace DBus.Tests
 			sig = new Signature ("u(uvb)");
 			Assert.IsFalse (sig.IsFixedSize);
 		}
+		
+		[Test]
+		public void CombineSignatures ()
+		{
+			var x = Signature.ByteSig + Signature.StringSig;
+			Assert.AreEqual ("ys", x.Value, "#1");
+		}
+		
+		[Test]
+		public void MakeStruct ()
+		{
+			// 'r' isn't used, just brackets.
+			var x = Signature.MakeStruct (Signature.ByteSig + Signature.StringSig);
+			Assert.AreEqual ("(ys)", x.Value, "#1");
+		}
+		
+		[Test]
+		public void MakeDictionary_Invalid ()
+		{
+			// 'r' isn't used, just brackets.
+			var x = Signature.MakeDict (Signature.StringSig, Signature.Int32Sig);
+			Assert.AreEqual ("a{si}", x.Value, "#1");
+		}
+		
+		
+		[Test]
+		public void MakeDictionary ()
+		{
+			// Make a valid dictionary entry, should appear as an array of dict_entries
+			var x = Signature.MakeDictEntry (Signature.StringSig, Signature.Int32Sig);
+			Assert.AreEqual ("{si}", x.Value, "#1");
+		}
+		
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		public void MakeDictionary_TwoCompleteTypes_Key ()
+		{
+			// They key is not a single complete type
+			 Signature.MakeDictEntry (Signature.StringSig + Signature.Int32Sig, Signature.Int32Sig);
+		}
+		
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		public void MakeDictionary_TwoCompleteTypes_Value ()
+		{
+			// They value is not a single complete type
+			Signature.MakeDictEntry (Signature.StringSig, Signature.Int32Sig + Signature.Int32Sig);
+		}
 	}
 }
