@@ -124,6 +124,36 @@ namespace DBus.Tests
 		}
 		
 		[Test]
+		public void MakeArray ()
+		{
+			var x = Signature.MakeArray (Signature.Int32Sig);
+			Assert.AreEqual ("ai", x.Value, "#1");
+		}
+		
+		[Test]
+		public void MakeArrayOfStruct ()
+		{
+			var type = Signature.MakeStruct (Signature.Int32Sig + Signature.Int32Sig);
+			var x = Signature.MakeArray (type);
+			Assert.AreEqual ("a(ii)", x.Value, "#1");
+		}
+		
+		[Test]
+		public void MakeArrayOfArray ()
+		{
+			var x = Signature.MakeArray (Signature.Int32Sig);
+			x = Signature.MakeArray (x);
+			Assert.AreEqual ("aai", x.Value, "#1");
+		}
+		
+		[Test]
+		[ExpectedException (typeof (ArgumentException))]
+		public void MakeArray_NotSingleCompleteType ()
+		{
+			Signature.MakeArray (Signature.Int32Sig + Signature.UInt16Sig);
+		}
+		
+		[Test]
 		public void MakeStruct ()
 		{
 			// 'r' isn't used, just brackets.
@@ -132,20 +162,26 @@ namespace DBus.Tests
 		}
 		
 		[Test]
-		public void MakeDictionary_Invalid ()
+		[ExpectedException (typeof (ArgumentException))]
+		public void MakeStruct_Empty ()
 		{
-			// 'r' isn't used, just brackets.
-			var x = Signature.MakeDict (Signature.StringSig, Signature.Int32Sig);
-			Assert.AreEqual ("a{si}", x.Value, "#1");
+			Signature.MakeStruct (Signature.Empty);
 		}
 		
-		
 		[Test]
-		public void MakeDictionary ()
+		public void MakeDictionaryEntry ()
 		{
 			// Make a valid dictionary entry, should appear as an array of dict_entries
 			var x = Signature.MakeDictEntry (Signature.StringSig, Signature.Int32Sig);
 			Assert.AreEqual ("{si}", x.Value, "#1");
+		}
+		
+		[Test]
+		public void MakeDictionary ()
+		{
+			// 'r' isn't used, just brackets.
+			var x = Signature.MakeDict (Signature.StringSig, Signature.Int32Sig);
+			Assert.AreEqual ("a{si}", x.Value, "#1");
 		}
 		
 		[Test]
