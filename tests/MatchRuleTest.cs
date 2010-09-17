@@ -5,6 +5,7 @@
 using System;
 using NUnit.Framework;
 using DBus;
+using DBus.Protocol;
 
 namespace DBus.Tests
 {

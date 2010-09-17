@@ -6,6 +6,7 @@ using System;
 using NUnit.Framework;
 using DBus;
 using System.Linq;
+using DBus.Protocol;
 
 namespace DBus.Tests
 {
