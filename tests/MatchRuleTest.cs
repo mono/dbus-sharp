@@ -18,7 +18,7 @@ namespace DBus.Tests
 			string ruleText = @"member='Lala'";
 			MatchRule rule = MatchRule.Parse (ruleText);
 
-			Assert.AreEqual (null, rule.MessageType);
+			Assert.AreEqual (MessageType.All, rule.MessageType);
 			Assert.AreEqual (0, rule.Args.Count);
 			Assert.AreEqual (ruleText, rule.ToString ());
 		}
@@ -94,7 +94,7 @@ namespace DBus.Tests
 			string ruleText = @"arg5='F,o\'o\\\'\\',arg8=''";
 			MatchRule rule = MatchRule.Parse (ruleText);
 
-			Assert.AreEqual (null, rule.MessageType);
+			Assert.AreEqual (MessageType.All, rule.MessageType);
 			Assert.AreEqual (2, rule.Args.Count);
 
 			//Assert.AreEqual (@"F,o'o\'\", rule.Args[5].Value);
