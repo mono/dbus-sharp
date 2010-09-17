@@ -10,7 +10,8 @@ TESTS= \
 	MatchRuleTest.cs \
 	ObjectPathTest.cs \
 	RenamedInterfaceTest.cs \
-	SignatureTest.cs
+	SignatureTest.cs \
+	MessageReaderTest.cs
 
 TESTLIB=dbus-sharp-tests.dll
 
