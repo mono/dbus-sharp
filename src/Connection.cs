@@ -50,7 +50,7 @@ namespace DBus
 
 		// TODO: Complete disconnection support
 		internal bool isShared = false;
-		public void Close ()
+		public virtual void Close ()
 		{
 			if (isShared)
 				throw new Exception ("Cannot disconnect a shared Connection");
