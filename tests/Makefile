@@ -1,21 +1,31 @@
 CSC=gmcs
-RUNNER=nunit-console2
+NUNIT_CONSOLE=$$(echo $$(which nunit-console2 || which nunit-console))
+RUNNER=$(NUNIT_CONSOLE) -nologo
 
-TESTS=AddressTest.cs AuthenticationTest.cs MatchRuleTest.cs ObjectPathTest.cs SignatureTest.cs BusTests.cs
+TESTS= \
+	AddressTest.cs \
+	AuthenticationTest.cs \
+	BusTests.cs \
+	MatchRuleTest.cs \
+	ObjectPathTest.cs \
+	SignatureTest.cs
 
 TESTLIB=dbus-sharp-tests.dll
 
-dbus-sharp-tests.dll: $(TESTS)
+$(TESTLIB): $(TESTS)
 	$(CSC) -debug -t:library -out:$@ -r:dbus-sharp.dll -keyfile:../dbus-sharp.snk -pkg:mono-nunit $(TESTS)
 
-.PHONY: setup
+.PHONY: setup run clean
 setup:
 	ln -sf ../src/dbus-sharp.dll .
+	ln -sf ../src/dbus-sharp.dll.config .
 	ln -sf ../src/dbus-sharp.dll.mdb .
 
-.PHONY: run
 run: $(TESTLIB)
 	if test -z "$$DBUS_SESSION_BUS_ADDRESS" ; then \
 		eval `dbus-launch --sh-syntax` ; \
 		echo "D-Bus per-session daemon address is: $$DBUS_SESSION_BUS_ADDRESS" ; \
 	fi; $(RUNNER) $(TESTLIB);
+
+clean:
+	rm $(TESTLIB)
