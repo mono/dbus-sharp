@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 using NUnit.Framework;
 using DBus;
@@ -241,6 +242,11 @@ namespace DBus.Tests
 		{
 			void_string_called = true;
 		}
+	
+		/*void IDemoTwo.Say2 (string str)
+		{
+			Console.WriteLine ("IDemoTwo.Say2: " + str);
+		}*/
 	
 		public void FireSomeEvent ()
 		{
