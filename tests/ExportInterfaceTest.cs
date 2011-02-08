@@ -54,7 +54,7 @@ namespace DBus.Tests
 		/// <summary>
 		/// 
 		/// </summary>
-		[Test]
+		[Test, Ignore]
 		public void FireEvent ()
 		{
 			test.SomeEvent += HandleSomeEventA;

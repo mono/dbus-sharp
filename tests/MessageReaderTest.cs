@@ -29,7 +29,7 @@ namespace DBus.Tests
 		[Test]
 		public void ReadIntArrayLittleEndian ()
 		{
-			byte[] data = new byte[] { 4, 0, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0 };
+			byte[] data = new byte[] { 16, 0, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0 };
 			MessageReader reader = new MessageReader (EndianFlag.Little, data);
 			
 			int[] array = (int[])reader.ReadArray (typeof (int));
@@ -42,7 +42,7 @@ namespace DBus.Tests
 		[Test]
 		public void ReadIntArrayBigEndian ()
 		{
-			byte[] data = new byte[] { 0, 0, 0, 4, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0, 8, 8 };
+			byte[] data = new byte[] { 0, 0, 0, 16, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0, 8, 8 };
 			MessageReader reader = new MessageReader (EndianFlag.Big, data);
 			
 			int[] array = (int[])reader.ReadArray (typeof (int));
