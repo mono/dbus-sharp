@@ -6,6 +6,7 @@ TESTS= \
 	AddressTest.cs \
 	AuthenticationTest.cs \
 	BusTests.cs \
+	ExportInterfaceTest.cs \
 	MatchRuleTest.cs \
 	ObjectPathTest.cs \
 	SignatureTest.cs
