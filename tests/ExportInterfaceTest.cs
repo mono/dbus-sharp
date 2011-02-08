@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 using NUnit.Framework;
 using DBus;
@@ -130,6 +129,66 @@ namespace DBus.Tests
 			string str = "abcd";
 			Assert.AreEqual (str.Length, test.StringLength (str));
 		}
+		
+		/// <summary>
+		/// 
+		/// </summary>
+		[Test]
+		public void ComplexAsVariant ()
+		{
+			MyTuple2 cpx = new MyTuple2 ();
+			cpx.A = "a";
+			cpx.B = "b";
+			cpx.C = new Dictionary<int,MyTuple> ();
+			cpx.C[3] = new MyTuple("foo", "bar");
+			object cpxRet = test.ComplexAsVariant (cpx, 12);
+			MyTuple2 mt2ret = (MyTuple2)Convert.ChangeType (cpxRet, typeof (MyTuple2));
+			Assert.AreEqual (cpx.A, mt2ret.A);
+			Assert.AreEqual (cpx.B, mt2ret.B);
+			Assert.AreEqual (cpx.C[3].A, mt2ret.C[3].A);
+			Assert.AreEqual (cpx.C[3].B, mt2ret.C[3].B);
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		[Test]
+		public void Property ()
+		{
+			int i = 99;
+			test.SomeProp = i;
+			Assert.AreEqual (i, test.SomeProp);
+			test.SomeProp = i + 1;
+			Assert.AreEqual (i + 1, test.SomeProp);
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		[Test]
+		public void CatchException ()
+		{
+			try {
+				test.ThrowSomeException ();
+				Assert.Fail ("An exception should be thrown before getting here");
+			} catch (Exception ex) {
+				Assert.IsTrue (ex.Message.Contains ("Some exception"));
+			}
+		}
+		
+		/* Locks up ?
+		/// <summary>
+		/// 
+		/// </summary>
+		[Test]
+		public void ObjectArray ()
+		{
+			string str = "The best of times";
+			ITestOne[] objs = test.GetObjectArray ();
+			foreach (ITestOne obj in objs) {
+				Assert.AreEqual (str.Length, obj.StringLength (str));
+			}
+		}*/
 	}
 	
 	public delegate void SomeEventHandler (string arg1, object arg2, double arg3, MyTuple mt);
@@ -150,8 +209,8 @@ namespace DBus.Tests
 		void GetPresences (uint[] @contacts, out IDictionary<uint,SimplePresence> @presence);
 		object ComplexAsVariant (object v, int num);
 	
-		ITestOne[] GetEmptyObjArr ();
-		ITestOne[] GetObjArr ();
+		ITestOne[] GetEmptyObjectArray ();
+		ITestOne[] GetObjectArray ();
 		int SomeProp { get; set; }
 	}
 	
@@ -182,11 +241,6 @@ namespace DBus.Tests
 		{
 			void_string_called = true;
 		}
-	
-		/*void IDemoTwo.Say2 (string str)
-		{
-			Console.WriteLine ("IDemoTwo.Say2: " + str);
-		}*/
 	
 		public void FireSomeEvent ()
 		{
@@ -231,22 +285,17 @@ namespace DBus.Tests
 	
 		public object ComplexAsVariant (object v, int num)
 		{
-			Console.WriteLine ("v: " + v);
-			Console.WriteLine ("v null? " + (v == null));
-	
 			MyTuple2 mt2 = (MyTuple2)Convert.ChangeType (v, typeof (MyTuple2));
-			Console.WriteLine ("mt2.C[3].B " + mt2.C[3].B);
-			Console.WriteLine ("num: " + num);
 	
-			return v;
+			return mt2;
 		}
 	
-		public ITestOne[] GetEmptyObjArr ()
+		public ITestOne[] GetEmptyObjectArray ()
 		{
 			return new Test[] {};
 		}
 	
-		public ITestOne[] GetObjArr ()
+		public ITestOne[] GetObjectArray ()
 		{
 			return new ITestOne[] {this};
 		}
