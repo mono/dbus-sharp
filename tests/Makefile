@@ -5,16 +5,13 @@ RUNNER=$(NUNIT_CONSOLE) -nologo
 TESTS= \
 	AddressTest.cs \
 	AuthenticationTest.cs \
-	BusTests.cs \
 	ExportInterfaceTest.cs \
-	MatchRuleTest.cs \
 	ObjectPathTest.cs \
 	RenamedInterfaceTest.cs \
+	MatchRuleTest.cs \
 	SignatureTest.cs \
 	MessageReaderTest.cs \
-	MatchRuleTest.cs \
-	ObjectPathTest.cs \
-	SignatureTest.cs
+	MessageWriterTest.cs
 
 TESTLIB=dbus-sharp-tests.dll
 
