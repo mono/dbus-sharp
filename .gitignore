@@ -19,5 +19,8 @@ INSTALL
 install-sh
 missing
 src/AssemblyInfo.cs
+tests/%temp%/
+tests/TestResult.xml
+tests/dbus-sharp.dll.config
 xdb.il
 xdb.s
