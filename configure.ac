@@ -55,5 +55,6 @@ src/AssemblyInfo.cs
 src/Makefile
 tools/Makefile
 examples/Makefile
+tests/Makefile
 ])
 

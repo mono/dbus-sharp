@@ -1,4 +1,4 @@
-SUBDIRS = src tools examples
+SUBDIRS = src tools examples tests
 
 test:
 	$(MAKE) -C tests setup run
