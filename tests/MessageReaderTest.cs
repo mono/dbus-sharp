@@ -128,6 +128,19 @@ namespace DBus.Tests
 			Assert.AreEqual (3, stct.Item3);
 		}
 
+		[Test]
+		public void ReadIntIntIntStructLittleEndianGeneric ()
+		{
+			// Will test the fast path
+			byte[] data = new byte[] { 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0 };
+			MessageReader reader = new MessageReader (EndianFlag.Little, data);
+
+			TestStruct2 stct = reader.ReadStruct<TestStruct2> ();
+			Assert.AreEqual (1, stct.Item1);
+			Assert.AreEqual (2, stct.Item2);
+			Assert.AreEqual (3, stct.Item3);
+		}
+
 		[StructLayout (LayoutKind.Sequential)]
 		struct TestStruct3 {
 			public long Item1;
