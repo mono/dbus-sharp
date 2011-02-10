@@ -54,18 +54,15 @@ namespace DBus.Tests
 		/// <summary>
 		/// 
 		/// </summary>
-		[Test, Ignore]
+		[Test]
 		public void FireEvent ()
 		{
 			test.SomeEvent += HandleSomeEventA;
 			test.FireSomeEvent ();
-			Console.WriteLine ("fired-EventA");
-			Bus.Session.Iterate ();
 			Assert.AreEqual (1, event_a_count);
 			
 			test.SomeEvent -= HandleSomeEventA;
 			test.FireSomeEvent ();
-			Bus.Session.Iterate ();
 			
 			Assert.AreEqual (1, event_a_count);
 		}
@@ -73,7 +70,6 @@ namespace DBus.Tests
 		private void HandleSomeEventA (string arg1, object arg2, double arg3, MyTuple mt)
 		{
 			event_a_count++;
-			Console.WriteLine ("EventA");
 		}
 
 		/// <summary>
