@@ -28,8 +28,8 @@ public class ManagedDBusTestExport
 				bus.Iterate ();
 		} else {
 			//import a remote to a local proxy
-			//demo = bus.GetObject<IDemo> (bus_name, path);
-			demo = bus.GetObject<DemoProx> (bus_name, path);
+			demo = bus.GetObject<IDemo> (bus_name, path);
+			//demo = bus.GetObject<DemoProx> (bus_name, path);
 		}
 
 		Console.WriteLine ();
