@@ -6,7 +6,7 @@ CSFLAGS = \
 
 LIBFLAGS = \
 	-r:dbus-sharp.dll \
-	-pkg:mono-nunit
+	$(NUNIT_LIBS)
 
 DBUS_SHARP_ASSEMBLY = $(top_builddir)/src/dbus-sharp.dll
 
@@ -23,6 +23,8 @@ CSFILES = \
 	RenamedInterfaceTest.cs \
 	SignatureTest.cs
 
+if ENABLE_TESTS
+
 all: $(TARGET)
 
 $(TARGET): $(CSFILES)
@@ -33,6 +35,8 @@ $(TARGET): $(CSFILES)
 
 test: $(TARGET)
 	$(RUNNER) $(TARGET)
+
+endif
 
 EXTRA_DIST = \
 	$(CSFILES)
