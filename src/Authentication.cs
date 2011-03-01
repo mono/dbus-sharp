@@ -23,10 +23,10 @@ namespace DBus
 
 		public static bool operator == (UUID a, UUID b)
 		{
-			if (a.a == b.a && a.b == b.b && a.c == b.c && a.d == b.d)
-				return true;
-			else
-				return false;
+			return a.a == b.a
+				&& a.b == b.b
+				&& a.c == b.c
+				&& a.d == b.d;
 		}
 
 		public static bool operator != (UUID a, UUID b)
