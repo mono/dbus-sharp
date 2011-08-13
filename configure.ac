@@ -48,6 +48,8 @@ for asm in $required_assemblies; do
 	fi
 done
 
+AC_CHECK_LIB([socket], [main],, AC_MSG_ERROR(missing required library libsocket))
+
 AC_OUTPUT([
 Makefile
 dbus-sharp-1.0.pc
