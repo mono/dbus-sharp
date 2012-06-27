@@ -2,6 +2,7 @@
 // This software is made available under the MIT License
 // See COPYING for details
 
+using System;
 using NUnit.Framework;
 using DBus;
 using org.freedesktop.DBus;
@@ -14,30 +15,22 @@ namespace DBus.Tests
 		string bus_name = "org.dbussharp.restaurant";
 		ObjectPath path = new ObjectPath ("/org/dbussharp/restaurant");
 
-		/// <summary>
-		/// 
-		/// </summary>
-		[Test]
-		[Ignore ("Not working for now")]
+		[Test, Ignore]
 		public void FirstInterface ()
 		{
 			var restaurant = new StandingRestaurant ();
-			Bus.Session.Register (path, restaurant);
 			Assert.AreEqual (Bus.Session.RequestName (bus_name), RequestNameReply.PrimaryOwner);
+			Bus.Session.Register (path, restaurant);
 
 			try {
-				Assert.AreEqual ("cheese", GetFood ());
+				Assert.AreEqual ("cheese", GetFood (false));
 			} finally {
 				Bus.Session.ReleaseName (bus_name);
 				Bus.Session.Unregister (path);
 			}
 		}
 		
-		/// <summary>
-		/// 
-		/// </summary>
-		[Test]
-		[Ignore ("Not working for now")]
+		[Test, Ignore]
 		public void SecondInterface ()
 		{
 			var restaurant = new SeatedRestaurant ();
@@ -45,19 +38,20 @@ namespace DBus.Tests
 			Assert.AreEqual (Bus.Session.RequestName (bus_name), RequestNameReply.PrimaryOwner);
 
 			try {
-				Assert.AreEqual ("bacon", GetFood ());				
+				Assert.AreEqual ("bacon", GetFood (true));
 			} finally {
 				Bus.Session.ReleaseName (bus_name);
 				Bus.Session.Unregister (path);
 			}
 		}
 		
-		private string GetFood ()
+		string GetFood (bool second)
 		{
-			IRestaurantBase restaurant = Bus.Session.GetObject<IRestaurantv2> (bus_name, path);
-			if (restaurant == null) {
+			IRestaurantBase restaurant = null;
+			if (second)
+				restaurant = Bus.Session.GetObject<IRestaurantv2> (bus_name, path);
+			else
 				restaurant = Bus.Session.GetObject<IRestaurant> (bus_name, path);
-			}
 			return restaurant.Food ();
 		}
 	}
