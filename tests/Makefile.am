@@ -6,6 +6,7 @@ CSFLAGS = \
 
 LIBFLAGS = \
 	-r:dbus-sharp.dll \
+	-r:System.Xml.Linq.dll \
 	$(NUNIT_LIBS)
 
 DBUS_SHARP_ASSEMBLY = $(top_builddir)/src/dbus-sharp.dll
@@ -21,7 +22,9 @@ CSFILES = \
 	MatchRuleTest.cs \
 	ObjectPathTest.cs \
 	RenamedInterfaceTest.cs \
-	SignatureTest.cs
+	SignatureTest.cs \
+	MessageReaderTest.cs \
+	MessageWriterTest.cs
 
 if ENABLE_TESTS
 
