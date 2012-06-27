@@ -37,7 +37,7 @@ $(TARGET): $(CSFILES)
 	$(GMCS) -out:$@ $(CSFLAGS) $(LIBFLAGS) $^
 
 test: $(TARGET)
-	$(RUNNER) $(TARGET)
+	$(RUNNER) $$TEST_HARNESS_FLAGS $(TARGET)
 
 endif
 
