@@ -130,7 +130,7 @@ namespace DBus.Tests
 		/// <summary>
 		/// 
 		/// </summary>
-		[Test, Ignore ("That's a bit brutal right now")]
+		[Test]
 		public void ComplexAsVariant ()
 		{
 			MyTuple2 cpx = new MyTuple2 ();

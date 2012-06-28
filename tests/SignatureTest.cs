@@ -56,7 +56,6 @@ namespace DBus.Tests
 		
 		[Test]
 		[ExpectedException (typeof (ArgumentException))]
-		[Ignore ("Not implemented yet")]
 		public void ParseInvalid_MissingClosingBrace ()
 		{
 			// Use an invalid type code
@@ -65,7 +64,6 @@ namespace DBus.Tests
 		
 		[Test]
 		[ExpectedException (typeof (ArgumentException))]
-		[Ignore ("Not implemented yet")]
 		public void ParseInvalid_MissingOpeningBrace ()
 		{
 			// Use an invalid type code
@@ -93,7 +91,7 @@ namespace DBus.Tests
 			Assert.IsTrue (a == b);
 			Assert.IsTrue (a.GetElementSignature () == Signature.StringSig);
 
-			Assert.AreEqual (a + b + Signature.Empty, new Signature ("asas"));
+			Assert.AreEqual (Signature.ArraySig + Signature.StringSig + Signature.Empty, new Signature ("as"));
 		}
 
 		[Test]
@@ -199,6 +197,13 @@ namespace DBus.Tests
 		{
 			// They value is not a single complete type
 			Signature.MakeDictEntry (Signature.StringSig, Signature.Int32Sig + Signature.Int32Sig);
+		}
+
+		[Test]
+		public void ComplexSignatureIsSingleTypeTest ()
+		{
+			string sig = "(ssa{i(ss)})";
+			Assert.IsTrue (new Signature (sig).IsSingleCompleteType);
 		}
 	}
 }
