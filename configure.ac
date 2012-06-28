@@ -2,7 +2,7 @@ AC_INIT(src/DBus.cs)
 
 AC_PREREQ(2.13)
 
-API_VERSION=1.0
+API_VERSION=2.0
 #VERSION=$API_VERSION.0
 VERSION=0.7.0
 
@@ -35,6 +35,12 @@ if test "x$GACUTIL" = "xno"; then
 	AC_MSG_ERROR([You need to install gacutil])
 fi
 AC_SUBST(GACUTIL)
+
+AC_PATH_PROG(XBUILD, xbuild, no)
+if test "x$GACUTIL" = "xno"; then
+	AC_MSG_ERROR([You need to install xbuild])
+fi
+AC_SUBST(XBUILD)
 
 required_assemblies="Mono.Posix"
 
@@ -75,7 +81,6 @@ else
 		fi
 	fi
 fi
-
 
 AC_OUTPUT([
 Makefile
