@@ -20,6 +20,9 @@ test: $(TARGET)
 
 check: test
 
+# This is not needed on that branch
+setup: ;
+
 .PHONY: $(TARGET)
 
 endif
