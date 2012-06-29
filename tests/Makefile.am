@@ -21,7 +21,9 @@ test: $(TARGET)
 check: test
 
 # This is not needed on that branch
+# it's for compat with wrench
 setup: ;
+run: check
 
 .PHONY: $(TARGET)
 
