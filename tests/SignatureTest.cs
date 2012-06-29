@@ -3,9 +3,11 @@
 // See COPYING for details
 
 using System;
+using System.Linq;
+using System.Collections.Generic;
+
 using NUnit.Framework;
 using DBus;
-using System.Linq;
 using DBus.Protocol;
 
 namespace DBus.Tests
@@ -204,6 +206,14 @@ namespace DBus.Tests
 		{
 			string sig = "(ssa{i(ss)})";
 			Assert.IsTrue (new Signature (sig).IsSingleCompleteType);
+		}
+
+		[Test]
+		public void AssertComplexTypeToTypeTest ()
+		{
+			var sig = new Signature ("(ssa{i(ss)})");
+			Assert.AreEqual (typeof (DBusStruct<string, string, Dictionary<int, DBusStruct<string, string>>>),
+			                 sig.ToType ());
 		}
 	}
 }
