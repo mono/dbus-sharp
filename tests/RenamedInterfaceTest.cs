@@ -15,7 +15,7 @@ namespace DBus.Tests
 		string bus_name = "org.dbussharp.restaurant";
 		ObjectPath path = new ObjectPath ("/org/dbussharp/restaurant");
 
-		[Test, Ignore]
+		[Test]
 		public void FirstInterface ()
 		{
 			var restaurant = new StandingRestaurant ();
@@ -30,7 +30,7 @@ namespace DBus.Tests
 			}
 		}
 		
-		[Test, Ignore]
+		[Test]
 		public void SecondInterface ()
 		{
 			var restaurant = new SeatedRestaurant ();
