@@ -53,6 +53,8 @@
     <Compile Include="BusTests.cs" />
     <Compile Include="ExportInterfaceTest.cs" />
     <Compile Include="RenamedInterfaceTest.cs" />
+    <Compile Include="MessageReaderTest.cs" />
+    <Compile Include="MessageWriterTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\dbus-sharp.csproj">
