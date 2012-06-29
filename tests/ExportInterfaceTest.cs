@@ -9,6 +9,7 @@ using System.Threading;
 
 using NUnit.Framework;
 using DBus;
+using DBus.Protocol;
 using org.freedesktop.DBus;
 
 namespace DBus.Tests
@@ -139,11 +140,12 @@ namespace DBus.Tests
 			cpx.C = new Dictionary<int,MyTuple> ();
 			cpx.C[3] = new MyTuple("foo", "bar");
 			object cpxRet = test.ComplexAsVariant (cpx, 12);
-			MyTuple2 mt2ret = (MyTuple2)Convert.ChangeType (cpxRet, typeof (MyTuple2));
-			Assert.AreEqual (cpx.A, mt2ret.A);
-			Assert.AreEqual (cpx.B, mt2ret.B);
-			Assert.AreEqual (cpx.C[3].A, mt2ret.C[3].A);
-			Assert.AreEqual (cpx.C[3].B, mt2ret.C[3].B);
+			//MyTuple2 mt2ret = (MyTuple2)Convert.ChangeType (cpxRet, typeof (MyTuple2));
+			var mt2ret = (DBusStruct<string, string, Dictionary<int, DBusStruct<string, string>>>)cpxRet;
+			Assert.AreEqual (cpx.A, mt2ret.Item1);
+			Assert.AreEqual (cpx.B, mt2ret.Item2);
+			Assert.AreEqual (cpx.C[3].A, mt2ret.Item3[3].Item1);
+			Assert.AreEqual (cpx.C[3].B, mt2ret.Item3[3].Item2);
 		}
 
 		/// <summary>
@@ -287,9 +289,10 @@ namespace DBus.Tests
 	
 		public object ComplexAsVariant (object v, int num)
 		{
-			MyTuple2 mt2 = (MyTuple2)Convert.ChangeType (v, typeof (MyTuple2));
+			Console.WriteLine ("Foo");
+			//MyTuple2 mt2 = (MyTuple2)Convert.ChangeType (v, typeof (MyTuple2));
 	
-			return mt2;
+			return v;
 		}
 	
 		public ITestOne[] GetEmptyObjectArray ()
