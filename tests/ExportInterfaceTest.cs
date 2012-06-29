@@ -289,9 +289,6 @@ namespace DBus.Tests
 	
 		public object ComplexAsVariant (object v, int num)
 		{
-			Console.WriteLine ("Foo");
-			//MyTuple2 mt2 = (MyTuple2)Convert.ChangeType (v, typeof (MyTuple2));
-	
 			return v;
 		}
 	
