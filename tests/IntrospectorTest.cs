@@ -69,13 +69,28 @@ namespace DBus.Tests
 				</node>";
 
 		[Test]
-		public void SimpleInterfaceIntrospectTest ()
+		public void SimpleInterfaceTest ()
 		{
 			intro.WriteStart ();
 			intro.WriteType (typeof (ObjectIntrospectedImpl));
 			intro.WriteEnd ();
 			Assert.IsTrue (XNode.DeepEquals (XDocument.Parse (expectedOutputSimpleInterface),
 			                                 XDocument.Parse (intro.Xml)));
+		}
+
+		[Test]
+		public void InterfaceThroughWireTest ()
+		{
+			ObjectIntrospectedImpl impl = new ObjectIntrospectedImpl ();
+			ObjectPath path = new ObjectPath ("/org/dbussharp/test");
+			Bus.Session.Register (path, impl);
+
+			const string ServiceName = "org.dbussharp.testservice";
+			Bus.Session.RequestName (ServiceName);
+			var iface = Bus.Session.GetObject<org.freedesktop.DBus.Introspectable> ("org.dbussharp.testservice", path);
+
+			Assert.IsTrue (XNode.DeepEquals (XDocument.Parse (expectedOutputSimpleInterface),
+			                                 XDocument.Parse (iface.Introspect ())));
 		}
 	}
 }
