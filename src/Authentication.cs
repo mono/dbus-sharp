@@ -13,21 +13,20 @@ namespace DBus
 {
 	using Authentication;
 
-	//using System.Runtime.InteropServices;
-	//[StructLayout (LayoutKind.Sequential)]
-	unsafe struct UUID
+	struct UUID
 	{
-		private int a, b, c, d;
 		const int ByteLength = 16;
-
+		static readonly Random rand = new Random ();
 		public static readonly UUID Zero = new UUID ();
+
+		private int a, b, c, d;
 
 		public static bool operator == (UUID a, UUID b)
 		{
-			if (a.a == b.a && a.b == b.b && a.c == b.c && a.d == b.d)
-				return true;
-			else
-				return false;
+			return a.a == b.a
+				&& a.b == b.b
+				&& a.c == b.c
+				&& a.d == b.d;
 		}
 
 		public static bool operator != (UUID a, UUID b)
@@ -55,11 +54,10 @@ namespace DBus
 		{
 			StringBuilder sb = new StringBuilder (ByteLength * 2);
 
-			fixed (int* p = &a) {
-					byte* bp = (byte*)p;
-					for (int i = 0 ; i != ByteLength ; i++)
-						sb.Append (bp[i].ToString ("x2", CultureInfo.InvariantCulture));
-			}
+			sb.AppendFormat ("{0:x8}", a);
+			sb.AppendFormat ("{0:x8}", b);
+			sb.AppendFormat ("{0:x8}", c);
+			sb.AppendFormat ("{0:x8}", d);
 
 			return sb.ToString ();
 		}
@@ -70,88 +68,25 @@ namespace DBus
 				throw new Exception ("Cannot parse UUID/GUID of invalid length");
 
 			UUID id = new UUID ();
-
-			byte* result = (byte*)&id.a;
-			int n = 0, i = 0;
-			while (n < ByteLength) {
-				result[n] = (byte)(Sasl.FromHexChar (hex[i++]) << 4);
-				result[n++] += Sasl.FromHexChar (hex[i++]);
-			}
-
-			return id;
-		}
-
-		static Random rand = new Random ();
-		static byte[] buf = new byte[12];
-		public static UUID Generate (DateTime timestamp)
-		{
-			UUID id = new UUID ();
-
-			lock (buf) {
-				rand.NextBytes (buf);
-				fixed (byte* bp = &buf[0]) {
-					int* p = (int*)bp;
-					id.a = p[0];
-					id.b = p[1];
-					id.c = p[2];
-				}
-			}
-
-			//id.d is assigned to by Timestamp
-			id.Timestamp = timestamp;
-
+			id.a = Int32.Parse (hex.Substring (0, 8), NumberStyles.HexNumber);
+			id.b = Int32.Parse (hex.Substring (8, 8), NumberStyles.HexNumber);
+			id.c = Int32.Parse (hex.Substring (16, 8), NumberStyles.HexNumber);
+			id.d = Int32.Parse (hex.Substring (24, 8), NumberStyles.HexNumber);
 			return id;
 		}
 
 		public static UUID Generate ()
 		{
-			return Generate (DateTime.Now);
-		}
+			UUID id = new UUID ();
 
-		public uint UnixTimestamp
-		{
-			get {
-				uint unixTime;
-
-				fixed (int* ip = &d) {
-					if (BitConverter.IsLittleEndian) {
-						byte* p = (byte*)ip;
-						byte* bp = (byte*)&unixTime;
-						bp[0] = p[3];
-						bp[1] = p[2];
-						bp[2] = p[1];
-						bp[3] = p[0];
-					} else {
-						unixTime = *(uint*)ip;
-					}
-				}
-
-				return unixTime;
-			} set {
-				uint unixTime = value;
-
-				fixed (int* ip = &d) {
-					if (BitConverter.IsLittleEndian) {
-						byte* p = (byte*)&unixTime;
-						byte* bp = (byte*)ip;
-						bp[0] = p[3];
-						bp[1] = p[2];
-						bp[2] = p[1];
-						bp[3] = p[0];
-					} else {
-						*(uint*)ip = unixTime;
-					}
-				}
+			lock (rand) {
+				id.a = rand.Next (Int32.MinValue, Int32.MaxValue);
+				id.b = rand.Next (Int32.MinValue, Int32.MaxValue);
+				id.c = rand.Next (Int32.MinValue, Int32.MaxValue);
+				id.d = rand.Next (Int32.MinValue, Int32.MaxValue);
 			}
-		}
-
-		public DateTime Timestamp
-		{
-			get {
-				return Sasl.UnixToDateTime (UnixTimestamp);
-			} set {
-				UnixTimestamp = (uint)Sasl.DateTimeToUnix (value);
-			}
+			
+			return id;
 		}
 	}
 }
