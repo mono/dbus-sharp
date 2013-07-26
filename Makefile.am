@@ -1,5 +1,8 @@
 SUBDIRS = src tools examples
 
+test:
+	$(MAKE) -C tests setup run
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = dbus-sharp-1.0.pc
 
