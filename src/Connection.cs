@@ -176,6 +176,25 @@ namespace DBus
 		//temporary hack
 		internal void DispatchSignals ()
 		{
+			lock (delayed_signals)
+			lock (delayed_signals_recycle) {
+				if (trap_signals_flush) {
+					delayed_signals.Clear ();
+					delayed_signals_recycle.Clear ();
+					trap_signals_flush = false;
+				} else {
+					while (delayed_signals.Count != 0) {
+						Message msg = delayed_signals.Dequeue ();
+						HandleSignal (msg);
+					}
+
+					while (delayed_signals_recycle.Count != 0) {
+						delayed_signals.Enqueue (delayed_signals_recycle.Dequeue ());
+					}
+				}
+			}
+
+
 			lock (Inbound) {
 				while (Inbound.Count != 0) {
 					Message msg = Inbound.Dequeue ();
@@ -268,6 +287,23 @@ namespace DBus
 
 		Dictionary<uint,PendingCall> pendingCalls = new Dictionary<uint,PendingCall> ();
 
+		private Queue<Message> delayed_signals = new Queue<Message> ();
+		private Queue<Message> delayed_signals_recycle = new Queue<Message> ();
+		private int trap_signals_ref;
+		private bool trap_signals_flush;
+
+		public void TrapSignals ()
+		{
+			Interlocked.Increment (ref trap_signals_ref);
+		}
+
+		public void UntrapSignals ()
+		{
+			if (Interlocked.Decrement (ref trap_signals_ref) == 0) {
+				trap_signals_flush = true;
+			}
+		}
+
 		//this might need reworking with MulticastDelegate
 		internal void HandleSignal (Message msg)
 		{
@@ -304,6 +340,12 @@ namespace DBus
 				//TODO: how should we handle this condition? sending an Error may not be appropriate in this case
 				if (Protocol.Verbose)
 					Console.Error.WriteLine ("Warning: No signal handler for " + signal.Member);
+
+				if (trap_signals_ref > 0) {
+					lock (delayed_signals_recycle) {
+						delayed_signals_recycle.Enqueue (msg);
+					}
+				}
 			}
 		}
 
