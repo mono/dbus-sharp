@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Xml.Linq;
 using System.Collections.Generic;
 
@@ -7,6 +8,8 @@ using DBus.Protocol;
 
 using NUnit;
 using NUnit.Framework;
+
+using org.freedesktop.DBus;
 
 namespace DBus.Tests
 {
@@ -91,6 +94,26 @@ namespace DBus.Tests
 
 			Assert.IsTrue (XNode.DeepEquals (XDocument.Parse (expectedOutputSimpleInterface),
 			                                 XDocument.Parse (iface.Introspect ())));
+		}
+
+		[Test]
+		public void TestIntrospectable ()
+		{
+			var introspectable = Bus.Session.GetObject<Introspectable> ("org.freedesktop.DBus", ObjectPath.Root);
+			var xml = introspectable.Introspect ();
+			Assert.IsNotNull (xml);
+			Assert.IsNotEmpty (xml);
+
+			var doc = XDocument.Parse (xml);
+			Assert.AreEqual ((XName)"node", doc.Root.Name);
+			// the main dbus object has two interfaces, the dbus interface and the introspectable one
+			Assert.AreEqual (2, doc.Root.Elements ("interface").Count ());
+			var iface = doc.Root.Elements ("interface")
+				.FirstOrDefault (e => ((string)e.Attribute ("name")) == "org.freedesktop.DBus.Introspectable");
+			Assert.IsNotNull (iface);
+			Assert.AreEqual (1, iface.Elements ("method").Count ());
+			Assert.AreEqual ("Introspect", iface.Element ("method").Attribute ("name").Value);
+			Assert.AreEqual (1, iface.Element ("method").Elements ("arg").Count ());
 		}
 	}
 }
