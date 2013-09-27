@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dbus-sharp", "src\dbus-sharp.csproj", "{09A0200F-F3AF-4BD6-9EC4-E7D80D273E4C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dbus-monitor", "tools\dbus-monitor.csproj", "{736160C3-844E-43D9-8106-E492D74D92CD}"
