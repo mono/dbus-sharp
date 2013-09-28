@@ -84,7 +84,7 @@ fi
 
 AC_OUTPUT([
 Makefile
-dbus-sharp-1.0.pc
+dbus-sharp-2.0.pc
 src/AssemblyInfo.cs
 src/Makefile
 tools/Makefile

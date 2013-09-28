@@ -7,7 +7,7 @@
 *.userprefs
 bin/
 obj/
-dbus-sharp-1.0.pc
+dbus-sharp-2.0.pc
 Makefile
 Makefile.in
 aclocal.m4
