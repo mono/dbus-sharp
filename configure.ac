@@ -1,17 +1,16 @@
-AC_INIT(src/DBus.cs)
+m4_define([api_version], [2.0])
+m4_define([lib_version], [0.7.99])
 
 AC_PREREQ(2.13)
 
-API_VERSION=2.0
-#VERSION=$API_VERSION.0
-VERSION=0.7.99
-
-AC_SUBST(API_VERSION)
-AC_SUBST(VERSION)
-
-AM_INIT_AUTOMAKE(dbus-sharp, $VERSION)
+AC_INIT([dbus-sharp], lib_version)
+AC_CONFIG_SRCDIR([src/DBus.cs])
+AM_INIT_AUTOMAKE
 
 AM_MAINTAINER_MODE
+
+AC_SUBST([API_VERSION], [api_version])
+AC_SUBST([VERSION], [lib_version])
 
 AC_PROG_INSTALL
 
@@ -84,7 +83,7 @@ fi
 
 AC_OUTPUT([
 Makefile
-dbus-sharp-1.0.pc
+dbus-sharp-2.0.pc
 src/AssemblyInfo.cs
 src/Makefile
 tools/Makefile

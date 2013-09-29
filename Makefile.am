@@ -4,14 +4,14 @@ test:
 	$(MAKE) -C tests setup run
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = dbus-sharp-1.0.pc
+pkgconfig_DATA = dbus-sharp-2.0.pc
 
 EXTRA_DIST = \
-	dbus-sharp-1.0.pc.in \
+	dbus-sharp-2.0.pc.in \
 	dbus-sharp.snk
 
 DISTCLEANFILES = \
-	dbus-sharp-1.0.pc
+	dbus-sharp-2.0.pc
 
 MAINTAINERCLEANFILES = \
 	INSTALL \
