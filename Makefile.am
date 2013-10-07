@@ -8,7 +8,8 @@ pkgconfig_DATA = dbus-sharp-2.0.pc
 
 EXTRA_DIST = \
 	dbus-sharp-2.0.pc.in \
-	dbus-sharp.snk
+	dbus-sharp.snk \
+	dbus-sharp.sln
 
 DISTCLEANFILES = \
 	dbus-sharp-2.0.pc
