@@ -5,6 +5,18 @@ XBUILD_Q = $(XBUILD) /nologo /verbosity:quiet
 NUNIT_CONSOLE = $$(echo $$(which nunit-console2 || which nunit-console))
 RUNNER = $(NUNIT_CONSOLE) -nologo
 
+CSFILES = AddressTest.cs \
+	AuthenticationTest.cs \
+	MatchRuleTest.cs \
+	ObjectPathTest.cs \
+	SignatureTest.cs \
+	BusTests.cs \
+	ExportInterfaceTest.cs \
+	RenamedInterfaceTest.cs \
+	MessageReaderTest.cs \
+	MessageWriterTest.cs \
+	IntrospectorTest.cs
+
 if ENABLE_TESTS
 
 all: $(TARGET)
@@ -30,7 +42,8 @@ run: check
 endif
 
 EXTRA_DIST = \
-	$(CSFILES)
+	$(CSFILES) \
+	dbus-sharp-tests.csproj
 
 CLEANFILES = \
 	$(TARGET) \
