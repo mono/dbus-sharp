@@ -1,5 +1,5 @@
 m4_define([api_version], [2.0])
-m4_define([lib_version], [0.7.99])
+m4_define([lib_version], [0.8.0])
 
 AC_PREREQ(2.13)
 

@@ -51,7 +51,7 @@ namespace DBus.Tests
 		}
 
 		const string expectedOutputSimpleInterface = @"<!DOCTYPE node PUBLIC ""-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"" ""http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd"">
-			<!-- dbus-sharp 0.7.0 -->
+			<!-- dbus-sharp 0.8.0 -->
 				<node>
 				<interface name=""org.freedesktop.DBus.Introspectable"">
 				<method name=""Introspect"">
