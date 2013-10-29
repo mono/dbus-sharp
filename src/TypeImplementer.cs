@@ -25,7 +25,7 @@ namespace DBus
 		static ConstructorInfo messageWriterConstructor = typeof (MessageWriter).GetConstructor (Type.EmptyTypes);
 		static MethodInfo messageWriterWriteArray = typeof (MessageWriter).GetMethod ("WriteArray");
 		static MethodInfo messageWriterWriteDict = typeof (MessageWriter).GetMethod ("WriteFromDict");
-		static MethodInfo messageWriterWriteStruct = typeof (MessageWriter).GetMethod ("WriteStructure");
+		static MethodInfo messageWriterWritePad = typeof (MessageWriter).GetMethod ("WritePad", new Type[] {typeof (int)});
 		static MethodInfo messageReaderReadValue = typeof (MessageReader).GetMethod ("ReadValue", new Type[] { typeof (System.Type) });
 		static MethodInfo messageReaderReadArray = typeof (MessageReader).GetMethod ("ReadArray", Type.EmptyTypes);
 		static MethodInfo messageReaderReadDictionary = typeof (MessageReader).GetMethod ("ReadDictionary", Type.EmptyTypes);
@@ -233,8 +233,7 @@ namespace DBus
 				exactWriteMethod = messageWriterWriteDict.MakeGenericMethod (genArgs);
 				ilg.Emit (OpCodes.Call, exactWriteMethod);
 			} else {
-				MethodInfo mi = messageWriterWriteStruct.MakeGenericMethod (t);
-				ilg.Emit (OpCodes.Call, mi);
+				GenStructWriter (ilg, t);
 			}
 		}
 
@@ -242,6 +241,56 @@ namespace DBus
 		{
 			// FIXME: Field order!
 			return type.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+		}
+
+		//takes a writer and a reference to an object off the stack
+		public static void GenStructWriter (ILGenerator ilg, Type type)
+		{
+			LocalBuilder val = ilg.DeclareLocal (type);
+			ilg.Emit (OpCodes.Stloc, val);
+
+			LocalBuilder writer = ilg.DeclareLocal (typeof (MessageWriter));
+			ilg.Emit (OpCodes.Stloc, writer);
+
+			//align to 8 for structs
+			ilg.Emit (OpCodes.Ldloc, writer);
+			ilg.Emit (OpCodes.Ldc_I4, 8);
+			ilg.Emit (OpCodes.Call, messageWriterWritePad);
+
+			foreach (FieldInfo fi in GetMarshalFields (type)) {
+				Type t = fi.FieldType;
+
+				// null checking of fields
+				if (!t.IsValueType) {
+					Label notNull = ilg.DefineLabel ();
+
+					//if the value is null...
+					//ilg.Emit (OpCodes.Ldarg, i);
+					ilg.Emit (OpCodes.Ldloc, val);
+					ilg.Emit (OpCodes.Ldfld, fi);
+
+					ilg.Emit (OpCodes.Brtrue_S, notNull);
+
+					//...throw Exception
+					string paramName = fi.Name;
+					ilg.Emit (OpCodes.Ldstr, paramName);
+					// TODO: Should not really be argumentNullException
+					ilg.Emit (OpCodes.Newobj, argumentNullExceptionConstructor);
+					ilg.Emit (OpCodes.Throw);
+
+					//was not null, so all is well
+					ilg.MarkLabel (notNull);
+				}
+
+				//the Writer to write to
+				ilg.Emit (OpCodes.Ldloc, writer);
+
+				//the object to read from
+				ilg.Emit (OpCodes.Ldloc, val);
+				ilg.Emit (OpCodes.Ldfld, fi);
+
+				GenWriter (ilg, t);
+			}
 		}
 
 		public static void GenHookupMethod (ILGenerator ilg, MethodInfo declMethod, MethodInfo invokeMethod, string @interface, string member)

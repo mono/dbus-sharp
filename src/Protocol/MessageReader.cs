@@ -703,7 +703,7 @@ namespace DBus.Protocol
 
 		// If a struct is only composed of primitive type fields (i.e. blittable types)
 		// then this method return true. Result is cached in isPrimitiveStruct dictionary.
-		internal static bool IsEligibleStruct (Type structType, FieldInfo[] fields)
+		bool IsEligibleStruct (Type structType, FieldInfo[] fields)
 		{
 			bool result;
 			if (isPrimitiveStruct.TryGetValue (structType, out result))

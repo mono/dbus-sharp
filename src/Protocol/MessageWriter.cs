@@ -416,28 +416,10 @@ namespace DBus.Protocol
 			throw new Exception ("Array length " + ln.ToString () + " exceeds maximum allowed " + ProtocolInformation.MaxArrayLength + " bytes");
 		}
 
-		public void WriteStructure<T> (T value) where T : struct
+		public void WriteStructure<T> (T value)
 		{
-			FieldInfo[] fis = typeof (T).GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-			if (fis.Length == 0)
-				return;
-
-			WritePad (8);
-
-			if (MessageReader.IsEligibleStruct (typeof (T), fis)) {
-				byte[] buffer = new byte[Marshal.SizeOf (fis[0].FieldType) * fis.Length];
-				unsafe {
-					byte* pVal = (byte*)&value;
-					Marshal.Copy ((IntPtr)pVal, buffer, 0, buffer.Length);
-				}
-				stream.Write (buffer, 0, buffer.Length);
-				return;
-			}
-
-			object boxed = value;
-			foreach (var fi in fis)
-				Write (fi.FieldType, fi.GetValue (boxed));
+			TypeWriter<T> tWriter = TypeImplementer.GetTypeWriter<T> ();
+			tWriter (this, value);
 		}
 
 		public void WriteFromDict<TKey,TValue> (IDictionary<TKey,TValue> val)
