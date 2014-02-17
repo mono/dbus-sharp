@@ -538,27 +538,6 @@ namespace DBus.Protocol
 			return val;
 		}
 
-		public T ReadStruct<T> () where T : struct
-		{
-			ReadPad (8);
-
-			FieldInfo[] fis = typeof (T).GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-			// Empty struct? No need for processing
-			if (fis.Length == 0)
-				return default (T);
-
-			if (IsEligibleStruct (typeof (T), fis))
-				return NewMarshalStruct<T> (fis);
-
-			object val = Activator.CreateInstance<T> ();
-
-			foreach (System.Reflection.FieldInfo fi in fis)
-				fi.SetValue (val, ReadValue (fi.FieldType));
-
-			return (T)val;
-		}
-
 		object MarshalStruct (Type structType, FieldInfo[] fis)
 		{
 			object strct = Activator.CreateInstance (structType);
@@ -568,19 +547,6 @@ namespace DBus.Protocol
 			handle.Free ();
 
 			return strct;
-		}
-
-		T NewMarshalStruct<T> (FieldInfo[] fis) where T : struct
-		{
-			T val = default (T);
-			int sof = Marshal.SizeOf (fis[0].FieldType);
-
-			unsafe {
-				byte* pVal = (byte*)&val;
-				DirectCopy (sof, (uint)(fis.Length * sof), (IntPtr)pVal);
-			}
-
-			return val;
 		}
 
 		public void ReadNull ()
@@ -703,7 +669,7 @@ namespace DBus.Protocol
 
 		// If a struct is only composed of primitive type fields (i.e. blittable types)
 		// then this method return true. Result is cached in isPrimitiveStruct dictionary.
-		internal static bool IsEligibleStruct (Type structType, FieldInfo[] fields)
+		bool IsEligibleStruct (Type structType, FieldInfo[] fields)
 		{
 			bool result;
 			if (isPrimitiveStruct.TryGetValue (structType, out result))
