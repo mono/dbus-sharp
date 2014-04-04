@@ -2,6 +2,7 @@
 *.dll
 *.mdb
 *.suo
+*.pdb
 *.pidb
 *.user
 *.userprefs
