@@ -79,7 +79,7 @@ namespace DBus.Tests
 		[Test]
 		public void GetVariant ()
 		{
-			Assert.IsInstanceOfType (typeof (byte []), test.GetSomeVariant ());
+			Assert.IsInstanceOf<byte[]>(test.GetSomeVariant());
 		}
 		
 		/// <summary>
