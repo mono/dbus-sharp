@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using DBus.Protocol;
+using System.Diagnostics;
 
 namespace DBus.Transports
 {
@@ -24,6 +25,8 @@ namespace DBus.Transports
 
 		public event EventHandler WakeUp;
 
+		const string DBUS_DAEMON_LAUNCH_COMMAND = "dbus-launch";
+
 		public static Transport Create (AddressEntry entry)
 		{
 			switch (entry.Method) {
@@ -33,24 +36,68 @@ namespace DBus.Transports
 					transport.Open (entry);
 					return transport;
 				}
-#if !PORTABLE
+
 				case "unix":
 				{
-					Transport transport = new UnixNativeTransport ();
-					transport.Open (entry);
-					return transport;
+					if (OSHelpers.PlatformIsUnixoid) {
+						Transport transport = new UnixNativeTransport ();
+						transport.Open (entry);
+						return transport;
+					}
+					break;
 				}
-#endif
+
 #if ENABLE_PIPES
-				case "win": {
+				case "win":
+				{
 					Transport transport = new PipeTransport ();
 					transport.Open (entry);
 					return transport;
 				}
 #endif
-				default:
-					throw new NotSupportedException ("Transport method \"" + entry.Method + "\" not supported");
+
+				// "autolaunch:" means: the first client user of the dbus library shall spawn the daemon on itself, see dbus 1.7.8 from http://dbus.freedesktop.org/releases/dbus/
+				case "autolaunch":
+				{
+					if (OSHelpers.PlatformIsUnixoid)
+						break;
+
+					string addr = Address.GetSessionBusAddressFromSharedMemory ();
+
+					if (String.IsNullOrEmpty(addr)) // we have to launch the daemon ourselves
+					{   
+
+						string olddir = Directory.GetCurrentDirectory ();
+						Directory.SetCurrentDirectory (Environment.GetFolderPath (Environment.SpecialFolder.System)); // without this, the "current" folder for the new process will be the one where the current executable resides, and as a consequence, that folder cannot be relocated/deleted unless the daemon is stopped
+
+						Process process;      
+						process = Process.Start (DBUS_DAEMON_LAUNCH_COMMAND);
+						if (process==null)
+						{
+							Directory.SetCurrentDirectory(olddir);
+							throw new NotSupportedException ("Transport method \"autolaunch:\" - cannot launch dbus daemon '"+DBUS_DAEMON_LAUNCH_COMMAND+"'"); 
+						}
+
+						// wait for daemon
+						Stopwatch stopwatch = new Stopwatch ();
+						stopwatch.Start ();
+						do {
+							addr = Address.GetSessionBusAddressFromSharedMemory ();
+							if (String.IsNullOrEmpty(addr))
+								Thread.Sleep (100);
+						} while (String.IsNullOrEmpty (addr) && stopwatch.ElapsedMilliseconds <= 5000);
+
+						Directory.SetCurrentDirectory(olddir);
+					}
+
+					if (String.IsNullOrEmpty(addr))
+						throw new NotSupportedException ("Transport method \"autolaunch:\" - timeout during access to freshly launched dbus daemon"); 
+					return Create (AddressEntry.Parse (addr));
+				}
+
 			}
+
+			throw new NotSupportedException ("Transport method \"" + entry.Method + "\" not supported");
 		}
 
 		public abstract void Open (AddressEntry entry);
@@ -104,14 +151,21 @@ namespace DBus.Transports
 
 		internal Message ReadMessage ()
 		{
+			Message msg;
+
 			try {
-				return ReadMessageReal ();
+				msg = ReadMessageReal ();
 			} catch (IOException e) {
 				if (ProtocolInformation.Verbose)
 					Console.Error.WriteLine (e.Message);
 				connection.IsConnected = false;
-				return null;
+				msg = null;
 			}
+         
+			if (connection!=null && connection.Monitors!=null)
+				connection.Monitors(msg);
+
+			return msg;
 		}
 
 		int Read (byte[] buffer, int offset, int count)
