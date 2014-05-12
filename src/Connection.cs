@@ -399,9 +399,6 @@ namespace DBus
 
 		public object GetObject (Type type, string bus_name, ObjectPath path)
 		{
-			if (!CheckBusNameExists (bus_name))
-				return null;
-
 			//if the requested type is an interface, we can implement it efficiently
 			//otherwise we fall back to using a transparent proxy
 			if (type.IsInterface || type.IsAbstract) {
