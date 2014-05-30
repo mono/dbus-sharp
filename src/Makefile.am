@@ -15,6 +15,7 @@ CSFILES = Address.cs \
 	Introspection.cs \
 	Mapper.cs \
 	TypeImplementer.cs \
+	ReflectionExtensions.cs \
 	ArgDirection.cs \
 	ObjectPath.cs \
 	OSHelpers.cs \

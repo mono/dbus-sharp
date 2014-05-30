@@ -121,6 +121,11 @@ namespace DBus.Protocol
 			}
 		}
 
+		public object ReadValue()
+		{
+			return ReadValue (message.Signature);
+		}
+
 		public object ReadValue (DType dtype)
 		{
 			switch (dtype)
