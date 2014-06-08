@@ -281,11 +281,15 @@ namespace DBus
 				if (!isGet)
 				{
 					ilg.Emit (OpCodes.Ldarg_1);
+					ilg.Emit (OpCodes.Box, source.GetParameters ()[0].ParameterType);
 				}
 
 				ilg.Emit (OpCodes.Tailcall);
 				ilg.Emit (target.IsFinal ? OpCodes.Call : OpCodes.Callvirt, target);
-				ilg.Emit (OpCodes.Castclass, source.ReturnType);
+
+				if (isGet)
+					ilg.Emit (source.ReturnType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, source.ReturnType);
+
 				ilg.Emit (OpCodes.Ret);
 
 				if (isGet)
