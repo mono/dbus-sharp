@@ -3,6 +3,7 @@
 // See COPYING for details
 
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Collections.Generic;
@@ -88,6 +89,10 @@ namespace DBus
 
 			Dictionary<string,MethodBuilder> builders = new Dictionary<string,MethodBuilder> ();
 
+			HashSet<MethodInfo> props_and_events = new HashSet<MethodInfo> (iface.GetMethods ()
+			    .Where (x => iface.GetProperties ().Any (y => x == y.GetGetMethod (true) || x == y.GetSetMethod (true)) ||
+			                 iface.GetEvents     ().Any (y => x == y.GetAddMethod (true) || x == y.GetRemoveMethod (true))));
+
 			foreach (MethodInfo declMethod in iface.GetMethods ()) {
 				ParameterInfo[] parms = declMethod.GetParameters ();
 
@@ -108,7 +113,8 @@ namespace DBus
 				ILGenerator ilg = method_builder.GetILGenerator ();
 				GenHookupMethod (ilg, declMethod, sendMethodCallMethod, interfaceName, declMethod.Name);
 
-				if (declMethod.IsSpecialName)
+				// Is Event Or Property
+				if (props_and_events.Contains (declMethod))
 					builders[declMethod.Name] = method_builder;
 			}
 
@@ -258,7 +264,7 @@ namespace DBus
 			ilg.Emit (OpCodes.Ldstr, @interface);
 
 			//special case event add/remove methods
-			if (declMethod.IsSpecialName && (declMethod.Name.StartsWith ("add_") || declMethod.Name.StartsWith ("remove_"))) {
+			if (declMethod.Name.StartsWith ("add_") || declMethod.Name.StartsWith ("remove_")) {
 				string[] parts = declMethod.Name.Split (new char[]{'_'}, 2);
 				string ename = parts[1];
 
