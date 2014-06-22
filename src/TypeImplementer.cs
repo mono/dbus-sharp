@@ -89,10 +89,6 @@ namespace DBus
 
 			Dictionary<string,MethodBuilder> builders = new Dictionary<string,MethodBuilder> ();
 
-			HashSet<MethodInfo> props_and_events = new HashSet<MethodInfo> (iface.GetMethods ()
-			    .Where (x => iface.GetProperties ().Any (y => x == y.GetGetMethod (true) || x == y.GetSetMethod (true)) ||
-			                 iface.GetEvents     ().Any (y => x == y.GetAddMethod (true) || x == y.GetRemoveMethod (true))));
-
 			foreach (MethodInfo declMethod in iface.GetMethods ()) {
 				ParameterInfo[] parms = declMethod.GetParameters ();
 
@@ -114,7 +110,7 @@ namespace DBus
 				GenHookupMethod (ilg, declMethod, sendMethodCallMethod, interfaceName, declMethod.Name);
 
 				// Is Event Or Property
-				if (props_and_events.Contains (declMethod))
+				if (declMethod.IsEvent () || declMethod.IsProperty ())
 					builders[declMethod.Name] = method_builder;
 			}
 
@@ -264,7 +260,7 @@ namespace DBus
 			ilg.Emit (OpCodes.Ldstr, @interface);
 
 			//special case event add/remove methods
-			if (declMethod.Name.StartsWith ("add_") || declMethod.Name.StartsWith ("remove_")) {
+			if (declMethod.IsEvent () && (declMethod.Name.StartsWith ("add_") || declMethod.Name.StartsWith ("remove_"))) {
 				string[] parts = declMethod.Name.Split (new char[]{'_'}, 2);
 				string ename = parts[1];
 
@@ -568,6 +564,51 @@ namespace DBus
 		{
 			ilg.Emit (OpCodes.Ldtoken, t);
 			ilg.Emit (OpCodes.Call, getTypeFromHandleMethod);
+		}
+	}
+
+	internal static class MethodBaseExtensions {
+
+		static IDictionary<Type, HashSet<MethodBase>> events = new Dictionary<Type, HashSet<MethodBase>>();
+		static IDictionary<Type, HashSet<MethodBase>> properties = new Dictionary<Type, HashSet<MethodBase>>();
+
+		private static void InitialiseType (Type type)
+		{
+			lock (typeof(MethodBaseExtensions)) {
+				if (events.ContainsKey (type) && properties.ContainsKey (type))
+					return;
+
+				events [type]     = new HashSet<MethodBase>();
+				properties [type] = new HashSet<MethodBase>();
+
+				type.GetEvents ().Aggregate (events [type], (set, evt) => {
+					set.Add (evt.GetAddMethod ());
+					set.Add (evt.GetRemoveMethod ());
+					return set;
+				});
+				type.GetProperties ().Aggregate (properties [type], (set, prop) => {
+					set.Add (prop.GetGetMethod ());
+					set.Add (prop.GetSetMethod ());
+					return set;
+				});
+
+				events [type].Remove (null);
+				properties [type].Remove (null);
+			}
+		}
+
+		public static bool IsEvent (this MethodBase method)
+		{
+			InitialiseType (method.DeclaringType);
+			HashSet<MethodBase> methods = events [method.DeclaringType];
+			return methods.Contains (method);
+		}
+
+		public static bool IsProperty (this MethodBase method)
+		{
+			InitialiseType (method.DeclaringType);
+			HashSet<MethodBase> methods = properties [method.DeclaringType];
+			return methods.Contains (method);
 		}
 	}
 
