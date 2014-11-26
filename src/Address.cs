@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Xml;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Runtime.InteropServices;
@@ -159,8 +160,34 @@ namespace DBus
 	                                                installPath = installPath.Substring(0, i);
         	                                }
 
-						// TODO: Get from config
-						const string scope = "user";
+						string scope = "nonce";
+
+						string dbusConfSessionPath = installPath + "etc" + Path.DirectorySeparatorChar + "dbus-1" + Path.DirectorySeparatorChar + "session.conf";
+						if (File.Exists (dbusConfSessionPath))
+						{
+							XmlDocument doc = new XmlDocument();
+							doc.Load(dbusConfSessionPath);
+
+
+							XmlNodeList elemList = doc.GetElementsByTagName("listen");
+							if (elemList.Count > 0)
+							{
+								XmlNode node = elemList[0];
+								if (node != null)
+								{
+									string listenStr = node.InnerText;
+									if (!String.IsNullOrEmpty (listenStr))
+									{
+										string[] listenArr = listenStr.Split ('=');
+										if (listenArr.Length == 2)
+										{
+											scope = listenArr[1].Trim('*');
+										}
+									}
+								}
+							}
+						}
+						
 
 						if (scope == "user")
 						{
