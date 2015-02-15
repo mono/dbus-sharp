@@ -72,6 +72,13 @@ namespace DBus.Protocol
 			}
 		}
 
+		public IEnumerable<object> ReadValues ()
+		{
+			for (int i = 0; i < message.Signature.Length; ++i) {
+				yield return ReadValue (message.Signature[i]);
+			}
+		}
+
 		public object ReadValue (Type type)
 		{
 			if (type == typeof (void))

@@ -3,6 +3,7 @@
 // See COPYING for details
 
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Collections.Generic;
@@ -171,7 +172,7 @@ namespace DBus
 
 			MessageReader reader = SendMethodCall ("org.freedesktop.DBus.Properties", "Get", "ss", writer, typeof(object), out exception);
 
-			return reader.ReadVariant ();
+			return reader.ReadValues ().FirstOrDefault ();
 		}
 
 		public void SendPropertySet (string iface, string property, object value)

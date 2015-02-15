@@ -31,6 +31,7 @@ namespace DBus
 		static MethodInfo messageReaderReadArray = typeof (MessageReader).GetMethod ("ReadArray", Type.EmptyTypes);
 		static MethodInfo messageReaderReadDictionary = typeof (MessageReader).GetMethod ("ReadDictionary", Type.EmptyTypes);
 		static MethodInfo messageReaderReadStruct = typeof (MessageReader).GetMethod ("ReadStruct", Type.EmptyTypes);
+		static MethodInfo messageHelperGetDynamicValues = typeof (MessageHelper).GetMethod ("GetDynamicValues", new [] { typeof (Message) });
 
 		static Dictionary<Type,MethodInfo> writeMethods = new Dictionary<Type,MethodInfo> ();
 		static Dictionary<Type,object> typeWriters = new Dictionary<Type,object> ();
@@ -511,6 +512,92 @@ namespace DBus
 				return mi;
 
 			return null;
+		}
+
+		internal static PropertyCallers GenPropertyCallers (PropertyInfo target)
+		{
+			var pc = new PropertyCallers {
+				Type = target.PropertyType,
+				Get = GenGetMethod (target),
+				Set = GenSetMethod (target)
+			};
+
+			return pc;
+		}
+
+		internal static MethodCaller GenGetMethod (PropertyInfo target)
+		{
+			var mi = target.GetGetMethod ();
+
+			if (null == mi) {
+				return null;
+			}
+
+			Type[] parms = new Type[] { typeof (object), typeof (MessageReader), typeof (Message), typeof (MessageWriter) };
+			var method = new DynamicMethod ("PropertyGet", typeof(void), parms, typeof(MessageReader));
+
+			var ilg = method.GetILGenerator ();
+
+			ilg.Emit (OpCodes.Ldarg_0);
+			ilg.EmitCall (mi.IsFinal ? OpCodes.Call : OpCodes.Callvirt, mi, null);
+
+			LocalBuilder retLocal = ilg.DeclareLocal (mi.ReturnType);
+			ilg.Emit (OpCodes.Stloc, retLocal);
+
+			ilg.Emit (OpCodes.Ldarg_3);
+			ilg.Emit (OpCodes.Ldloc, retLocal);
+			GenWriter (ilg, mi.ReturnType);
+
+			ilg.Emit (OpCodes.Ret);
+
+			return (MethodCaller) method.CreateDelegate (typeof(MethodCaller));
+		}
+
+		internal static MethodCaller GenSetMethod (PropertyInfo target)
+		{
+			var mi = target.GetSetMethod ();
+
+			if (null == mi) {
+				return null;
+			}
+
+			Type[] parms = new Type[] { typeof (object), typeof (MessageReader), typeof (Message), typeof (MessageWriter) };
+			var method = new DynamicMethod ("PropertySet", typeof(void), parms, typeof(MessageReader));
+
+			var ilg = method.GetILGenerator ();
+
+			if (null == messageHelperGetDynamicValues) {
+				throw new MissingMethodException (typeof(MessageHelper).Name, "GetDynamicValues");
+			}
+
+			var args = ilg.DeclareLocal (typeof(object[]));
+			var arg = ilg.DeclareLocal (typeof(object));
+			var v = ilg.DeclareLocal (target.PropertyType);
+
+			ilg.Emit (OpCodes.Ldarg_2);
+			ilg.Emit (OpCodes.Call, messageHelperGetDynamicValues);
+			ilg.Emit (OpCodes.Stloc, args);
+
+			ilg.Emit (OpCodes.Ldloc, args);
+			ilg.Emit (OpCodes.Ldc_I4_2);
+			ilg.Emit (OpCodes.Ldelem, typeof(object));
+			ilg.Emit (OpCodes.Stloc, arg);
+
+			var cast = target.PropertyType.IsValueType
+				? OpCodes.Unbox_Any
+				: OpCodes.Castclass;
+
+			ilg.Emit (OpCodes.Ldloc, arg);
+			ilg.Emit (cast, target.PropertyType);
+			ilg.Emit (OpCodes.Stloc, v);
+
+			ilg.Emit (OpCodes.Ldarg_0);
+			ilg.Emit (OpCodes.Ldloc, v);
+			ilg.Emit (mi.IsFinal ? OpCodes.Call : OpCodes.Callvirt, mi);
+
+			ilg.Emit (OpCodes.Ret);
+
+			return (MethodCaller) method.CreateDelegate (typeof(MethodCaller));
 		}
 
 		internal static MethodCaller GenCaller (MethodInfo target)
