@@ -14,10 +14,82 @@ namespace DBus
 {
 	using Protocol;
 
-	internal class PropertyCallers {
-		public Type Type { get; set; }
+	internal class PropertyCall {
 		public MethodCaller Get { get; set; }
 		public MethodCaller Set { get; set; }
+		public PropertyInfo MetaData { get; set; }
+	}
+
+	internal class MethodCall {
+		public Signature Out { get; set; }
+		public Signature In { get; set; }
+		public MethodCaller Call { get; set; }
+		public MethodInfo MetaData { get; set; }
+	}
+
+	internal class MethodDictionary : Dictionary<string, MethodCall> { }
+	internal class PropertyDictionary : Dictionary<string, PropertyCall> { }
+
+	internal class InterfaceMethods : Dictionary<string, MethodDictionary> { }
+	internal class InterfaceProperties : Dictionary<string, PropertyDictionary> { }
+
+	internal class DBusMemberTable {
+
+		public Type ObjectType { get; private set; }
+
+		public DBusMemberTable(Type type)
+		{
+			ObjectType = type;
+		}
+
+		InterfaceMethods Methods = new InterfaceMethods();
+		InterfaceProperties Properties = new InterfaceProperties();
+
+		public MethodCall GetMethodCall (string iface, string name)
+		{
+			return Lookup<InterfaceMethods, MethodDictionary, string, string, MethodCall> (
+				Methods,
+				iface,
+				name,
+				(i, n) => {
+					Type it = Mapper.GetInterfaceType (ObjectType, i);
+					MethodInfo mi = it.GetMethod (n);
+					return TypeImplementer.GenMethodCall (mi);
+				}
+			);
+		}
+
+		public PropertyCall GetPropertyCall (string iface, string name)
+		{
+			return Lookup<InterfaceProperties, PropertyDictionary, string, string, PropertyCall> (
+				Properties,
+				iface,
+				name,
+				(i, n) => {
+					Type it = Mapper.GetInterfaceType(ObjectType, i);
+					PropertyInfo pi = it.GetProperty(n);
+					return TypeImplementer.GenPropertyCall (pi);
+				}
+			);
+		}
+
+		private static V Lookup<TMap1,TMap2,A,B,V> (TMap1 map, A k1, B k2, Func<A,B,V> factory)
+			where TMap2 : IDictionary<B, V>, new()
+			where TMap1 : IDictionary<A, TMap2>
+		{
+			TMap2 first;
+			if (!map.TryGetValue (k1, out first)) {
+				map [k1] = first = new TMap2 ();
+			}
+
+			V value;
+			if (!first.TryGetValue (k2, out value)) {
+				first [k2] = value = factory (k1, k2);
+			}
+
+			return value;
+		}
+
 	}
 
 	//TODO: perhaps ExportObject should not derive from BusObject
@@ -27,13 +99,7 @@ namespace DBus
 		//it's a bit silly as a property
 		bool isRegistered = false;
 
-		Dictionary<string, PropertyInfo> propertyInfoCache = new Dictionary<string, PropertyInfo> ();
-
-		Dictionary<string, MethodInfo> methodInfoCache = new Dictionary<string, MethodInfo> ();
-
-		static readonly Dictionary<MethodInfo, MethodCaller> mCallers = new Dictionary<MethodInfo, MethodCaller> ();
-
-		static readonly Dictionary<PropertyInfo, PropertyCallers> pCallers = new Dictionary<PropertyInfo, PropertyCallers> ();
+		static readonly Dictionary<Type, DBusMemberTable> typeMembers = new Dictionary<Type, DBusMemberTable>();
 
 		public ExportObject (Connection conn, ObjectPath object_path, object obj) : base (conn, null, object_path)
 		{
@@ -75,24 +141,14 @@ namespace DBus
 			intro.WriteType (Object.GetType ());
 		}
 
-		internal static MethodCaller GetMCaller (MethodInfo mi)
-		{
-			MethodCaller mCaller;
-			if (!mCallers.TryGetValue (mi, out mCaller)) {
-				mCaller = TypeImplementer.GenCaller (mi);
-				mCallers[mi] = mCaller;
-			}
-			return mCaller;
-		}
-
 		public static ExportObject CreateExportObject (Connection conn, ObjectPath object_path, object obj)
 		{
+			Type type = obj.GetType ();
+			DBusMemberTable table;
+			if (!typeMembers.TryGetValue (type, out table)) {
+				typeMembers [type] = new DBusMemberTable (type);
+			}
 			return new ExportObject (conn, object_path, obj);
-		}
-
-		private static string Key (string iface, string member)
-		{
-			return string.Format ("{0}.{1}", iface, member);
 		}
 
 		public virtual void HandleMethodCall (MessageContainer method_call)
@@ -103,26 +159,23 @@ namespace DBus
 				return;
 			}
 
-			var cache_key = Key (method_call.Interface, method_call.Member);
-			MethodInfo mi;
-			if (!methodInfoCache.TryGetValue (cache_key, out mi)) {
-				mi = Mapper.GetMethod (Object.GetType (), method_call);
-				methodInfoCache [cache_key] = mi;
-			}
+			MethodCall mCaller = null;
 
-			if (mi == null) {
+			try {
+				mCaller = typeMembers[Object.GetType()].GetMethodCall(
+					method_call.Interface,
+					method_call.Member
+				);
+			}
+			catch { /* No Such Member */ }
+
+			if (mCaller == null) {
 				conn.MaybeSendUnknownMethodError (method_call);
 				return;
 			}
 
-			MethodCaller mCaller;
-			if (!mCallers.TryGetValue (mi, out mCaller)) {
-				mCaller = TypeImplementer.GenCaller (mi);
-				mCallers[mi] = mCaller;
-			}
-
-			Signature inSig, outSig;
-			TypeImplementer.SigsForMethod (mi, out inSig, out outSig);
+			Signature inSig  = mCaller.In,
+			          outSig = mCaller.Out;
 
 			Message msg = method_call.Message;
 			MessageReader msgReader = new MessageReader (msg);
@@ -130,12 +183,12 @@ namespace DBus
 
 			Exception raisedException = null;
 			try {
-				mCaller (Object, msgReader, msg, retWriter);
+				mCaller.Call (Object, msgReader, msg, retWriter);
 			} catch (Exception e) {
 				raisedException = e;
 			}
 
-			IssueReply (method_call, outSig, retWriter, mi, raisedException);
+			IssueReply (method_call, outSig, retWriter, mCaller.MetaData, raisedException);
 		}
 
 		private void IssueReply (MessageContainer method_call, Signature outSig, MessageWriter retWriter, MethodInfo mi, Exception raisedException)
@@ -183,31 +236,41 @@ namespace DBus
 			object[] args = MessageHelper.GetDynamicValues (msg);
 
 			string face = (string) args [0];
+
+			if ("GetAll" == method_call.Member) {
+				// TODO
+				throw new NotImplementedException ();
+			}
+
 			string name = (string) args [1];
 
-			PropertyInfo p = GetPropertyInfo (Object.GetType (), face, name);
-			PropertyCallers pcs = GetPropertyCallers (p);
+			PropertyCall pcs = typeMembers[Object.GetType()].GetPropertyCall (
+				face,
+				name
+			);
 
-			MethodCaller pc;
 			MethodInfo mi;
+			MethodCaller pc;
+			Signature outSig, inSig = method_call.Signature;
 
 			switch (method_call.Member) {
 			case "Set":
+				mi = pcs.MetaData.GetSetMethod ();
 				pc = pcs.Set;
-				mi = p.GetSetMethod ();
+				outSig = Signature.Empty;
 				break;
 			case "Get":
+				mi = pcs.MetaData.GetGetMethod ();
 				pc = pcs.Get;
-				mi = p.GetGetMethod ();
+				outSig = Signature.GetSig(mi.ReturnType);
 				break;
-			case "GetAll":
-				throw new NotImplementedException ();
 			default:
 				throw new ArgumentException (string.Format ("No such method {0}.{1}", method_call.Interface, method_call.Member));
 			}
 
-			if (null == pc || null == mi) {
-				throw new MissingMethodException ();
+			if (null == pc) {
+				conn.MaybeSendUnknownMethodError (method_call);
+				return;
 			}
 
 			Exception raised = null;
@@ -217,33 +280,7 @@ namespace DBus
 				raised = e;
 			}
 
-			Signature inSig, outSig;
-			TypeImplementer.SigsForMethod (mi, out inSig, out outSig);
-
 			IssueReply (method_call, outSig, retWriter, mi, raised);
-		}
-
-		private PropertyInfo GetPropertyInfo (Type type, string @interface, string property)
-		{
-			var key = Key (@interface, property);
-			PropertyInfo pi;
-			if (!propertyInfoCache.TryGetValue (key, out pi)) {
-				pi = Mapper.GetPublicProperties(Mapper.GetInterfaceType (type, @interface)).First (x => property == x.Name);
-				propertyInfoCache [key] = pi;
-			}
-
-			return  pi;
-		}
-
-		private static PropertyCallers GetPropertyCallers (PropertyInfo pi)
-		{
-			PropertyCallers pCaller;
-			if (!pCallers.TryGetValue (pi, out pCaller)) {
-				pCaller = TypeImplementer.GenPropertyCallers (pi);
-				pCallers[pi] = pCaller;
-			}
-
-			return pCaller;
 		}
 
 		public object Object {

@@ -514,18 +514,30 @@ namespace DBus
 			return null;
 		}
 
-		internal static PropertyCallers GenPropertyCallers (PropertyInfo target)
+		internal static MethodCall GenMethodCall (MethodInfo target)
 		{
-			var pc = new PropertyCallers {
-				Type = target.PropertyType,
-				Get = GenGetMethod (target),
-				Set = GenSetMethod (target)
+			Signature inSig, outSig;
+			SigsForMethod (target, out inSig, out outSig);
+			return new MethodCall {
+				Out = outSig,
+				In = inSig,
+				Call = GenCaller (target),
+				MetaData = target
+			};
+		}
+
+		internal static PropertyCall GenPropertyCall (PropertyInfo target)
+		{
+			var pc = new PropertyCall {
+				Get = GenGetCall (target),
+				Set = GenSetCall (target),
+				MetaData = target
 			};
 
 			return pc;
 		}
 
-		internal static MethodCaller GenGetMethod (PropertyInfo target)
+		internal static MethodCaller GenGetCall (PropertyInfo target)
 		{
 			var mi = target.GetGetMethod ();
 
@@ -533,15 +545,20 @@ namespace DBus
 				return null;
 			}
 
-			Type[] parms = new Type[] { typeof (object), typeof (MessageReader), typeof (Message), typeof (MessageWriter) };
+			var parms = new Type[] {
+				typeof (object),
+				typeof (MessageReader),
+				typeof (Message),
+				typeof (MessageWriter)
+			};
 			var method = new DynamicMethod ("PropertyGet", typeof(void), parms, typeof(MessageReader));
 
 			var ilg = method.GetILGenerator ();
 
+			var retLocal = ilg.DeclareLocal (mi.ReturnType);
+
 			ilg.Emit (OpCodes.Ldarg_0);
 			ilg.EmitCall (mi.IsFinal ? OpCodes.Call : OpCodes.Callvirt, mi, null);
-
-			LocalBuilder retLocal = ilg.DeclareLocal (mi.ReturnType);
 			ilg.Emit (OpCodes.Stloc, retLocal);
 
 			ilg.Emit (OpCodes.Ldarg_3);
@@ -553,7 +570,7 @@ namespace DBus
 			return (MethodCaller) method.CreateDelegate (typeof(MethodCaller));
 		}
 
-		internal static MethodCaller GenSetMethod (PropertyInfo target)
+		internal static MethodCaller GenSetCall (PropertyInfo target)
 		{
 			var mi = target.GetSetMethod ();
 
@@ -561,7 +578,12 @@ namespace DBus
 				return null;
 			}
 
-			Type[] parms = new Type[] { typeof (object), typeof (MessageReader), typeof (Message), typeof (MessageWriter) };
+			var parms = new Type[] {
+				typeof (object),
+				typeof (MessageReader),
+				typeof (Message),
+				typeof (MessageWriter)
+			};
 			var method = new DynamicMethod ("PropertySet", typeof(void), parms, typeof(MessageReader));
 
 			var ilg = method.GetILGenerator ();

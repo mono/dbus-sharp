@@ -24,18 +24,18 @@ namespace DBus.Tests
 		ObjectPath path = new ObjectPath ("/org/dbussharp/test");
 		
 		int event_a_count = 0;
-        
+
 		[TestFixtureSetUp]
-        public void Setup ()
-        {
+		public void Setup ()
+		{
 			test_server = new Test ();
 			Bus.Session.Register (path, test_server);
 			Assert.AreEqual (Bus.Session.RequestName (bus_name), RequestNameReply.PrimaryOwner);
 			
 			Assert.AreNotEqual (Bus.Session.RequestName (bus_name), RequestNameReply.PrimaryOwner);
 			test = Bus.Session.GetObject<ITestOne> (bus_name, path);
-        }
-		
+		}
+
 		/// <summary>
 		/// 
 		/// </summary>
