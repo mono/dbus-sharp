@@ -28,7 +28,9 @@ namespace DBus
 	}
 
 	internal class MethodDictionary : Dictionary<string, MethodCall> { }
-	internal class PropertyDictionary : Dictionary<string, PropertyCall> { }
+	internal class PropertyDictionary : Dictionary<string, PropertyCall> {
+		public MethodCaller All { get; set; }
+	}
 
 	internal class InterfaceMethods : Dictionary<string, MethodDictionary> { }
 	internal class InterfaceProperties : Dictionary<string, PropertyDictionary> { }
@@ -57,6 +59,21 @@ namespace DBus
 					return TypeImplementer.GenMethodCall (mi);
 				}
 			);
+		}
+
+		public MethodCaller GetPropertyAllCall (string iface)
+		{
+			PropertyDictionary calls;
+			if (!Properties.TryGetValue(iface, out calls)) {
+				Properties [iface] = calls = new PropertyDictionary ();
+			}
+
+			if (null == calls.All) {
+				Type it = Mapper.GetInterfaceType (ObjectType, iface);
+				calls.All = TypeImplementer.GenGetAllCall (it);
+			}
+
+			return calls.All;
 		}
 
 		public PropertyCall GetPropertyCall (string iface, string name)
@@ -238,8 +255,17 @@ namespace DBus
 			string face = (string) args [0];
 
 			if ("GetAll" == method_call.Member) {
-				// TODO
-				throw new NotImplementedException ();
+				Signature asv = Signature.MakeDict (Signature.StringSig, Signature.VariantSig);
+
+				MethodCaller call = typeMembers [Object.GetType ()].GetPropertyAllCall (face);
+
+				Exception ex = null;
+				try {
+					call (Object, msgReader, msg, retWriter);
+				} catch (Exception e) { ex = e; }
+
+				IssueReply (method_call, asv, retWriter, null, ex);
+				return;
 			}
 
 			string name = (string) args [1];

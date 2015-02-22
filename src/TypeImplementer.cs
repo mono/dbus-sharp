@@ -622,6 +622,55 @@ namespace DBus
 			return (MethodCaller) method.CreateDelegate (typeof(MethodCaller));
 		}
 
+		internal static MethodCaller GenGetAllCall (Type @interface)
+		{
+			var parms = new Type[] {
+				typeof (object),
+				typeof (MessageReader),
+				typeof (Message),
+				typeof (MessageWriter)
+			};
+			var method = new DynamicMethod ("PropertyGetAll", typeof(void), parms, typeof(MessageReader));
+
+			var ilg = method.GetILGenerator ();
+			var dctT = typeof(Dictionary<string, object>);
+
+			var strObj = new [] { typeof(string), typeof(object) };
+			var dctConstructor = dctT.GetConstructor (new Type[0]);
+			var dctAdd = dctT.GetMethod ("Add", strObj);
+
+			var accessors = @interface.GetProperties ().Where (x => null != x.GetGetMethod());
+
+			var dct = ilg.DeclareLocal (dctT);
+			var val = ilg.DeclareLocal (typeof(object));
+
+			ilg.Emit (OpCodes.Newobj, dctConstructor);
+			ilg.Emit (OpCodes.Stloc, dct);
+			foreach (var property in accessors) {
+				var mi = property.GetGetMethod ();
+
+				ilg.Emit (OpCodes.Ldarg_0);
+				ilg.Emit (mi.IsFinal ? OpCodes.Call : OpCodes.Callvirt, mi);
+				if (mi.ReturnType.IsValueType) {
+					ilg.Emit (OpCodes.Box, mi.ReturnType);
+				}
+				// TODO: Cast object references to typeof(object)?
+				ilg.Emit (OpCodes.Stloc, val);
+
+				ilg.Emit (OpCodes.Ldloc, dct);
+				ilg.Emit (OpCodes.Ldstr, property.Name);
+				ilg.Emit (OpCodes.Ldloc, val);
+				ilg.Emit (OpCodes.Call, dctAdd);
+			}
+			ilg.Emit (OpCodes.Ldarg_3);
+			ilg.Emit (OpCodes.Ldloc, dct);
+			GenWriter (ilg, dctT);
+
+			ilg.Emit (OpCodes.Ret);
+
+			return (MethodCaller) method.CreateDelegate (typeof(MethodCaller));
+		}
+
 		internal static MethodCaller GenCaller (MethodInfo target)
 		{
 			DynamicMethod hookupMethod = GenReadMethod (target);

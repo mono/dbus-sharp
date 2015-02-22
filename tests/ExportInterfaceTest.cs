@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 
 using NUnit.Framework;
@@ -159,6 +160,41 @@ namespace DBus.Tests
 			Assert.AreEqual (i, test.SomeProp);
 			test.SomeProp = i + 1;
 			Assert.AreEqual (i + 1, test.SomeProp);
+		}
+
+		[Test]
+		public void AllProperties ()
+		{
+			var args = string.Format (
+				"--dest={0} --type=method_call --print-reply " +
+				"{1} org.freedesktop.DBus.Properties.GetAll string:{0}",
+				bus_name,
+				path
+			);
+			Process dbus = new Process {
+				StartInfo = new ProcessStartInfo {
+					FileName = "dbus-send",
+					Arguments = args,
+					RedirectStandardOutput = true,
+					UseShellExecute = false
+				}
+			};
+
+			var iterator = new Thread(() => { do { Bus.Session.Iterate(); } while (true); });
+			iterator.Start ();
+
+			if (dbus.Start ()) {
+				dbus.WaitForExit ();
+
+				string output = dbus.StandardOutput.ReadToEnd ();
+				Assert.IsNotEmpty (output);
+				// FIXME: Use a regular expression?
+				Assert.IsTrue (output.Contains ("SomeProp"));
+			} else {
+				Assert.Ignore ("Failed to start test program");
+			}
+
+			iterator.Abort ();
 		}
 
 		/// <summary>
