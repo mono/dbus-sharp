@@ -227,49 +227,52 @@ namespace DBus
 							// See function _dbus_daemon_publish_session_bus_address() inside the daemon.
 							result = GetSessionBusAddressFromSharedMemory ();
 							if (string.IsNullOrEmpty (result))
-								result = "autolaunch:";
+								prefix = String.Empty;
 						}
 
-						for (int j=0; j<2; j++)
+						if (string.IsNullOrEmpty (result))
 						{
-							IntPtr mapping = OpenFileMapping (FileRights.Read, false, "DBusDaemonAddressInfo"+prefix);
-							if (mapping != IntPtr.Zero) {
-								IntPtr p = MapViewOfFile (mapping, FileRights.Read, 0, 0, 0);
-								if (p != IntPtr.Zero) {
-									result = Marshal.PtrToStringAnsi (p);
-									UnmapViewOfFile (p);
+							for (int j=0; j<2; j++)
+							{
+								IntPtr mapping = OpenFileMapping (FileRights.Read, false, "DBusDaemonAddressInfo"+prefix);
+								if (mapping != IntPtr.Zero) {
+									IntPtr p = MapViewOfFile (mapping, FileRights.Read, 0, 0, 0);
+									if (p != IntPtr.Zero) {
+										result = Marshal.PtrToStringAnsi (p);
+										UnmapViewOfFile (p);
+									}
+									CloseHandle (mapping);
+									if (result != null)
+									{
+										break;
+									}
 								}
-								CloseHandle (mapping);
-								if (result != null)
+
+								if (!File.Exists (installPath + "bin" + Path.DirectorySeparatorChar + "dbus-launch.exe"))
 								{
 									break;
 								}
-							}
 
-							if (!File.Exists (installPath + "bin" + Path.DirectorySeparatorChar + "dbus-launch.exe"))
-							{
-								break;
-							}
-
-							ProcessStartInfo info = new ProcessStartInfo ();
-							info.WorkingDirectory = installPath + "bin" + Path.DirectorySeparatorChar;
-							info.FileName = installPath + "bin" + Path.DirectorySeparatorChar + "dbus-launch.exe";
-							info.Arguments = "--session";
-							info.LoadUserProfile = false;
-							info.WindowStyle = ProcessWindowStyle.Hidden;
-							info.UseShellExecute = false;
-							info.CreateNoWindow = true;
-							info.RedirectStandardError = true;
-							info.RedirectStandardInput = true;
-							info.RedirectStandardOutput = true;
-							info.StandardErrorEncoding = Encoding.UTF8;
-							info.StandardOutputEncoding = Encoding.UTF8;
+								ProcessStartInfo info = new ProcessStartInfo ();
+								info.WorkingDirectory = installPath + "bin" + Path.DirectorySeparatorChar;
+								info.FileName = installPath + "bin" + Path.DirectorySeparatorChar + "dbus-launch.exe";
+								info.Arguments = "--session";
+								info.LoadUserProfile = false;
+								info.WindowStyle = ProcessWindowStyle.Hidden;
+								info.UseShellExecute = false;
+								info.CreateNoWindow = true;
+								info.RedirectStandardError = true;
+								info.RedirectStandardInput = true;
+								info.RedirectStandardOutput = true;
+								info.StandardErrorEncoding = Encoding.UTF8;
+								info.StandardOutputEncoding = Encoding.UTF8;
 				
-							Process process = new Process ();
-							process.StartInfo = info;
-							process.Start ();
-							process.WaitForExit (5000);
-							Thread.Sleep(5000);
+								Process process = new Process ();
+								process.StartInfo = info;
+								process.Start ();
+								process.WaitForExit (5000);
+								Thread.Sleep(5000);
+							}
 						}
 					}
 				}
