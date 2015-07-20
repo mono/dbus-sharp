@@ -1,6 +1,6 @@
 all: dbus-monitor.exe
 
-CSC=gmcs
+CSC=mcs
 CSFLAGS=-debug
 
 dbus-monitor.exe: Monitor.cs

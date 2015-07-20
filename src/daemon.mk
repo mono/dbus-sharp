@@ -1,4 +1,4 @@
-CSC=gmcs
+CSC=mcs
 
 SRCS=Daemon.cs Server.cs ServerBus.cs
 
