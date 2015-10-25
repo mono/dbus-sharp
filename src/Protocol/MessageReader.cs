@@ -96,7 +96,8 @@ namespace DBus.Protocol
 			} else if (type == typeof (string)) {
 				readValueCache[type] = () => ReadString ();
 				return ReadString ();
-			} else if (type.IsGenericType && type.GetGenericTypeDefinition () == typeof (Dictionary<,>)) {
+			} else if (type.IsGenericType && type.GetGenericArguments().Length == 2 &&
+					type.IsAssignableFrom (typeof (Dictionary<,>).MakeGenericType(type.GetGenericArguments()))) {
 				Type[] genArgs = type.GetGenericArguments ();
 				readValueCache[type] = () => ReadDictionary (genArgs[0], genArgs[1]);
 				return ReadDictionary (genArgs[0], genArgs[1]);
