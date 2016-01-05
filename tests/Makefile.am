@@ -1,6 +1,6 @@
 ASSEMBLY = dbus-sharp-tests
 TARGET = $(ASSEMBLY).dll
-XBUILD_Q = $(XBUILD) /nologo /verbosity:quiet
+XBUILD_Q = $(XBUILD) /p:TargetFrameworkVersion="4.5" /nologo /verbosity:quiet
 
 NUNIT_CONSOLE = $$(echo $$(which nunit-console2 || which nunit-console))
 RUNNER = $(NUNIT_CONSOLE) -nologo
