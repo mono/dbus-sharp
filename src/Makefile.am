@@ -1,6 +1,6 @@
 ASSEMBLY = dbus-sharp
 TARGET = $(ASSEMBLY).dll
-XBUILD_Q = $(XBUILD) /p:TargetFrameworkVersion="4.5" /nologo /verbosity:quiet
+XBUILD_Q = $(XBUILD) /p:TargetFrameworkVersion="v4.5" /nologo /verbosity:quiet
 
 # Use the gencssources script to generate this list
 CSFILES = Address.cs \
