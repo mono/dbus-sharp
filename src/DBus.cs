@@ -43,6 +43,8 @@ namespace org.freedesktop.DBus
 	public delegate void NameOwnerChangedHandler (string name, string old_owner, string new_owner);
 	public delegate void NameAcquiredHandler (string name);
 	public delegate void NameLostHandler (string name);
+	public delegate void InterfacesAddedHandler (ObjectPath path,IDictionary<string,IDictionary<string,object>> interfaces);
+	public delegate void InterfacesRemovedHandler (ObjectPath path,string[] interfaces);
 
 	[Interface ("org.freedesktop.DBus.Peer")]
 	public interface Peer
@@ -94,5 +96,13 @@ namespace org.freedesktop.DBus
 		uint GetConnectionUnixProcessID (string connection_name);
 		byte[] GetConnectionSELinuxSecurityContext (string connection_name);
 		void ReloadConfig ();
+	}
+
+	[Interface ("org.freedesktop.DBus.ObjectManager")]
+	public interface ObjectManager
+	{
+		IDictionary<ObjectPath,IDictionary<string,IDictionary<string,object>>> GetManagedObjects();
+		event InterfacesAddedHandler InterfacesAdded;
+		event InterfacesRemovedHandler InterfacesRemoved;
 	}
 }
