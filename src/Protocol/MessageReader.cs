@@ -72,6 +72,13 @@ namespace DBus.Protocol
 			}
 		}
 
+		public IEnumerable<object> ReadValues ()
+		{
+			for (int i = 0; i < message.Signature.Length; ++i) {
+				yield return ReadValue (message.Signature[i]);
+			}
+		}
+
 		public object ReadValue (Type type)
 		{
 			if (type == typeof (void))
@@ -87,6 +94,9 @@ namespace DBus.Protocol
 			} else if (type == typeof (ObjectPath)) {
 				readValueCache[type] = () => ReadObjectPath ();
 				return ReadObjectPath ();
+			} else if (type == typeof (Stream)) {
+				readValueCache[type] = () => ReadUnixFileDescriptor();
+				return ReadUnixFileDescriptor();
 			} else if (type == typeof (Signature)) {
 				readValueCache[type] = () => ReadSignature ();
 				return ReadSignature ();
@@ -96,7 +106,9 @@ namespace DBus.Protocol
 			} else if (type == typeof (string)) {
 				readValueCache[type] = () => ReadString ();
 				return ReadString ();
-			} else if (type.IsGenericType && type.GetGenericTypeDefinition () == typeof (Dictionary<,>)) {
+			} else if (type.IsGenericType 
+					&& (type.GetGenericTypeDefinition().IsAssignableFrom(typeof(IDictionary<,>)) 
+					|| type.GetGenericTypeDefinition().IsAssignableFrom(typeof(IDictionary<,>)))) {
 				Type[] genArgs = type.GetGenericArguments ();
 				readValueCache[type] = () => ReadDictionary (genArgs[0], genArgs[1]);
 				return ReadDictionary (genArgs[0], genArgs[1]);
@@ -165,6 +177,9 @@ namespace DBus.Protocol
 
 				case DType.Variant:
 					return ReadVariant ();
+
+				case DType.UnixFileDescriptor:
+					return ReadUnixFileDescriptor ();
 
 				default:
 					throw new Exception ("Unhandled D-Bus type: " + dtype);
@@ -362,6 +377,13 @@ namespace DBus.Protocol
 		{
 			//exactly the same as string
 			return new ObjectPath (ReadString ());
+		}
+
+		public Stream ReadUnixFileDescriptor ()
+		{
+			var handle = ReadInt32 ();
+			var stream = new Unix.UnixStream (handle);
+			return stream;
 		}
 
 		public Signature ReadSignature ()
