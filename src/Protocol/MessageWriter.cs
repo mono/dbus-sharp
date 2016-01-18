@@ -201,6 +201,8 @@ namespace DBus.Protocol
 				mi.Invoke (this, new object[] {val});
 			} else if (type == typeof (ObjectPath)) {
 				Write ((ObjectPath)val);
+			} else if (type == typeof (Stream)) {
+				Write (DType.UnixFileDescriptor,((Unix.UnixStream)val).usock.Handle);
 			} else if (type == typeof (Signature)) {
 				Write ((Signature)val);
 			} else if (type == typeof (object)) {
@@ -293,9 +295,21 @@ namespace DBus.Protocol
 					Write ((Signature)val);
 				}
 				break;
-				case DType.Variant:
+			case DType.Variant:
 				{
 					Write ((object)val);
+				}
+				break;
+			case DType.UnixFileDescriptor:
+				{
+					if(val.GetType()==typeof(Unix.UnixStream))
+					{
+						Write (((Unix.UnixStream)val).usock.Handle);
+					}
+					else
+					{
+						throw new NotImplementedException("Only UnixStream is implemented");
+					}
 				}
 				break;
 				default:

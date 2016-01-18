@@ -32,5 +32,7 @@ namespace DBus.Protocol
 		StructEnd = (byte)')',
 		DictEntryBegin = (byte)'{',
 		DictEntryEnd = (byte)'}',
+
+		UnixFileDescriptor = (byte)'h',
 	}
 }

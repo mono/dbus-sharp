@@ -76,6 +76,8 @@ namespace DBus.Protocol
 					return 1;
 				case DType.DictEntryBegin:
 					return 8;
+				case DType.UnixFileDescriptor:
+					return 4;
 				case DType.Invalid:
 				default:
 					throw new Exception ("Cannot determine alignment of " + dtype);

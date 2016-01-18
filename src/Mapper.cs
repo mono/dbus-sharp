@@ -387,6 +387,19 @@ namespace DBus
 		}
 	}
 
+	public static class InterfaceAttributeExtensions
+	{
+		public static string DBusInterfaceName(this Type type)
+		{
+			var attribute = type.GetCustomAttributes (false).SingleOrDefault (x => x.GetType () == typeof(InterfaceAttribute));
+			if (attribute != null) {
+				return (attribute as InterfaceAttribute).Name;
+			} else {
+				throw new InvalidOperationException ("The specified type is not decorated with the Interface attribute");
+			}
+		}
+	}
+
 	[AttributeUsage (AttributeTargets.Parameter | AttributeTargets.ReturnValue, AllowMultiple=false, Inherited=true)]
 	public class ArgumentAttribute : Attribute
 	{

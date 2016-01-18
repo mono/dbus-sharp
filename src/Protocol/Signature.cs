@@ -8,6 +8,7 @@ using System.Text;
 using System.Collections.Generic;
 //TODO: Reflection should be done at a higher level than this class
 using System.Reflection;
+using System.IO;
 
 namespace DBus.Protocol
 {
@@ -30,6 +31,7 @@ namespace DBus.Protocol
 		public static readonly Signature ObjectPathSig = Allocate (DType.ObjectPath);
 		public static readonly Signature SignatureSig = Allocate (DType.Signature);
 		public static readonly Signature VariantSig = Allocate (DType.Variant);
+		public static readonly Signature UnixFileDescriptorSig = Allocate (DType.UnixFileDescriptor);
 
 		public static bool operator == (Signature a, Signature b)
 		{
@@ -182,6 +184,8 @@ namespace DBus.Protocol
 					return SignatureSig.data;
 				case DType.Variant:
 					return VariantSig.data;
+				case DType.UnixFileDescriptor:
+					return UnixFileDescriptorSig.data;
 				default:
 					return new byte[] {(byte)value};
 			}
@@ -332,6 +336,8 @@ namespace DBus.Protocol
 				case DType.Variant:
 				case DType.DictEntryBegin:
 					return -1;
+				case DType.UnixFileDescriptor:
+					return 4;
 				case DType.Invalid:
 				default:
 					throw new Exception ("Cannot determine size of " + dtype);
@@ -620,6 +626,9 @@ namespace DBus.Protocol
 			if (type == typeof (ObjectPath))
 				return DType.ObjectPath;
 
+			if (type == typeof (Stream))
+				return DType.UnixFileDescriptor;
+
 			if (type == typeof (Signature))
 				return DType.Signature;
 
@@ -792,6 +801,8 @@ namespace DBus.Protocol
 				return typeof (string);
 			case DType.ObjectPath:
 				return typeof (ObjectPath);
+			case DType.UnixFileDescriptor:
+				return typeof(Stream);
 			case DType.Signature:
 				return typeof (Signature);
 			case DType.Array:
@@ -852,6 +863,9 @@ namespace DBus.Protocol
 
 			if (type == typeof (ObjectPath))
 				return Signature.ObjectPathSig;
+
+			if (type == typeof(Stream))
+				return Signature.UnixFileDescriptorSig;
 
 			if (type == typeof (void))
 				return Signature.Empty;
@@ -924,6 +938,7 @@ namespace DBus.Protocol
 				case DType.Double:
 				case DType.String:
 				case DType.ObjectPath:
+				case DType.UnixFileDescriptor:
 				case DType.Signature:
 				case DType.Variant:
 					pos += 1;
