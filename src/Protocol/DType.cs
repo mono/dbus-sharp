@@ -24,6 +24,7 @@ namespace DBus.Protocol
 		String = (byte)'s',
 		ObjectPath = (byte)'o',
 		Signature = (byte)'g',
+		UnixFileDescriptor = (byte)'h',
 
 		Array = (byte)'a',
 		Variant = (byte)'v',
@@ -32,7 +33,5 @@ namespace DBus.Protocol
 		StructEnd = (byte)')',
 		DictEntryBegin = (byte)'{',
 		DictEntryEnd = (byte)'}',
-
-		UnixFileDescriptor = (byte)'h',
 	}
 }

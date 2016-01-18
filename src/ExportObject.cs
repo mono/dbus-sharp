@@ -179,9 +179,6 @@ namespace DBus
 			MethodCall mCaller = null;
 
 			try {
-				var type = Object.GetType();
-
-
 				mCaller = typeMembers[Object.GetType()].GetMethodCall(
 					method_call.Interface,
 					method_call.Member

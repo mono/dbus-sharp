@@ -357,8 +357,6 @@ namespace DBus.Authentication
 					throw new Exception ("Authentication failure");
 				}
 
-				//Peer.isFinalRead = true;
-
 				AuthCommand reply;
 				if (!replies.MoveNext ())
 					yield break;
@@ -404,8 +402,6 @@ namespace DBus.Authentication
 				} else {
 				}
 
-				//yield continue;
-
 				yield return new AuthCommand ("BEGIN");
 				yield break;
 			}
@@ -413,6 +409,9 @@ namespace DBus.Authentication
 		}
 
 		public UUID ActualId = UUID.Zero;
+		//flat to indicate if we support unix file descriptors
+		//TODO: this should be passed to the connection, and checked when reading/writing objects and 
+		//throw an exception if attempting to pass a Stream and the connection does not support it
 		public bool SupportsUnixFileDescriptors;
 	}
 
