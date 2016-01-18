@@ -71,7 +71,6 @@ namespace DBus
 		public Bus (string address) : base (address)
 		{
 			this.bus = GetObject<IBus> (DBusName, DBusPath);
-
 			this.address = address;
 			Register ();
 		}

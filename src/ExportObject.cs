@@ -179,7 +179,7 @@ namespace DBus
 			MethodCall mCaller = null;
 
 			try {
-				mCaller = typeMembers[Object.GetType()].GetMethodCall(
+					mCaller = typeMembers[Object.GetType()].GetMethodCall(
 					method_call.Interface,
 					method_call.Member
 				);
