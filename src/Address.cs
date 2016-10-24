@@ -33,29 +33,6 @@ namespace DBus
 
 	static class Address
 	{
-		enum FileRights : uint          // constants from winbase.h
-		{
-			Read = 4,
-			Write = 2,
-			ReadWrite = Read + Write
-		}
-
-		[DllImport ("kernel32.dll", SetLastError = true)]
-		static extern IntPtr OpenFileMapping (FileRights dwDesiredAccess,
-						      bool bInheritHandle,
-						      string lpName);
-		[DllImport ("kernel32.dll", SetLastError = true)]
-		static extern IntPtr MapViewOfFile (IntPtr hFileMappingObject,
-						    FileRights dwDesiredAccess,
-						    uint dwFileOffsetHigh,
-						    uint dwFileOffsetLow,
-						    uint dwNumberOfBytesToMap);
-		[DllImport ("Kernel32.dll")]
-		static extern bool UnmapViewOfFile (IntPtr map);
-
-		[DllImport ("kernel32.dll")]
-        	static extern int CloseHandle (IntPtr hObject);
-
 		enum TOKEN_INFORMATION_CLASS
 		{
 			TokenUser = 1,
@@ -125,11 +102,11 @@ namespace DBus
 			}
 		}
 
-		public static string GetSessionBusAddressFromSharedMemory ()
+		public static string GetSessionBusAddressFromSharedMemory (string suffix = "")
 		{
-			string result = OSHelpers.ReadSharedMemoryString ("DBusDaemonAddressInfo", 255);
+			string result = OSHelpers.ReadSharedMemoryString (string.Format("DBusDaemonAddressInfo{0}", suffix));
 			if (String.IsNullOrEmpty(result))
-				result = OSHelpers.ReadSharedMemoryString ("DBusDaemonAddressInfoDebug", 255); // a DEBUG build of the daemon uses this different address...            
+				result = OSHelpers.ReadSharedMemoryString (string.Format("DBusDaemonAddressInfoDebug{0}", suffix)); // a DEBUG build of the daemon uses this different address...            
 			return result;
 		}
 
@@ -140,57 +117,20 @@ namespace DBus
 
 				// the predominant source for the address is the standard environment variable DBUS_SESSION_BUS_ADDRESS:
 				string result = Environment.GetEnvironmentVariable ("DBUS_SESSION_BUS_ADDRESS");
+				
 				if (String.IsNullOrEmpty (result))
 				{
 					result = null;
 
 				   	if (!OSHelpers.PlatformIsUnixoid) 
 					{
-						string prefix = "-";
+						// On Windows systems, the dbus-daemon additionally uses shared memory to publish the daemon's address.
+						// See function _dbus_daemon_publish_session_bus_address() inside the daemon.
+						result = GetSessionBusAddressFromSharedMemory ();
 
-						// Autolaunch
-						Uri uri = new Uri(Assembly.GetExecutingAssembly().CodeBase);
-
-        	                                int i = -1;
-                	                        string installPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-
-                        	                if ((i = installPath.ToLower().IndexOf ("lib")) != -1) {
-                                	                installPath = installPath.Substring(0, i);
-                                        	} else if ((i = installPath.ToLower().IndexOf ("bin")) != -1) {
-	                                                installPath = installPath.Substring(0, i);
-        	                                }
-
-						string scope = "nonce";
-
-						string dbusConfSessionPath = installPath + "etc" + Path.DirectorySeparatorChar + "dbus-1" + Path.DirectorySeparatorChar + "session.conf";
-						if (File.Exists (dbusConfSessionPath))
+						if (string.IsNullOrEmpty (result))
 						{
-							XmlDocument doc = new XmlDocument();
-							doc.Load(dbusConfSessionPath);
-
-
-							XmlNodeList elemList = doc.GetElementsByTagName("listen");
-							if (elemList.Count > 0)
-							{
-								XmlNode node = elemList[0];
-								if (node != null)
-								{
-									string listenStr = node.InnerText;
-									if (!String.IsNullOrEmpty (listenStr))
-									{
-										string[] listenArr = listenStr.Split ('=');
-										if (listenArr.Length == 2)
-										{
-											scope = listenArr[1].Trim('*');
-										}
-									}
-								}
-							}
-						}
-						
-
-						if (scope == "user")
-						{
+							string suffix = "-";
 							int tokenInfLength = 0 ;
 							bool res;
 
@@ -205,74 +145,29 @@ namespace DBus
 								TOKEN_USER tokenUser = (TOKEN_USER)Marshal.PtrToStructure (tokenInformation , typeof (TOKEN_USER)) ;
 
 								IntPtr pstr = IntPtr.Zero;
-								bool ok = ConvertSidToStringSid (tokenUser.User.Sid, out pstr);
+								ConvertSidToStringSid (tokenUser.User.Sid, out pstr);
 								string sidstr = Marshal.PtrToStringAuto (pstr);
 								LocalFree (pstr);
 
-								prefix += sidstr;
+								suffix += sidstr;
 							}
 
 							Marshal.FreeHGlobal (tokenInformation);
-						}
-						else if (scope == "install-path")
-						{
-		        	                        using (SHA1 sha = new SHA1CryptoServiceProvider ())
-		                	                {
-		                        	                prefix += BitConverter.ToString (sha.ComputeHash(Encoding.ASCII.GetBytes (installPath.ToLower()))).Replace ("-", "").ToLower();
-		                                	}
-						}
-						else
-						{
-							// On Windows systems, the dbus-daemon additionally uses shared memory to publish the daemon's address.
-							// See function _dbus_daemon_publish_session_bus_address() inside the daemon.
-							result = GetSessionBusAddressFromSharedMemory ();
-							if (string.IsNullOrEmpty (result))
-								prefix = String.Empty;
+
+							result = GetSessionBusAddressFromSharedMemory (suffix);
 						}
 
 						if (string.IsNullOrEmpty (result))
 						{
-							for (int j=0; j<2; j++)
-							{
-								IntPtr mapping = OpenFileMapping (FileRights.Read, false, "DBusDaemonAddressInfo"+prefix);
-								if (mapping != IntPtr.Zero) {
-									IntPtr p = MapViewOfFile (mapping, FileRights.Read, 0, 0, 0);
-									if (p != IntPtr.Zero) {
-										result = Marshal.PtrToStringAnsi (p);
-										UnmapViewOfFile (p);
-									}
-									CloseHandle (mapping);
-									if (result != null)
-									{
-										break;
-									}
-								}
+							string suffix = "-";
+							string installPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
-								if (!File.Exists (installPath + "bin" + Path.DirectorySeparatorChar + "dbus-launch.exe"))
-								{
-									break;
-								}
+		        	                        using (SHA1 sha = new SHA1CryptoServiceProvider ())
+		                	                {
+		                        	                suffix += BitConverter.ToString (sha.ComputeHash(Encoding.ASCII.GetBytes (installPath.ToLower()))).Replace ("-", "").ToLower();
+		                                	}
 
-								ProcessStartInfo info = new ProcessStartInfo ();
-								info.WorkingDirectory = installPath + "bin" + Path.DirectorySeparatorChar;
-								info.FileName = installPath + "bin" + Path.DirectorySeparatorChar + "dbus-launch.exe";
-								info.Arguments = "--session";
-								info.LoadUserProfile = false;
-								info.WindowStyle = ProcessWindowStyle.Hidden;
-								info.UseShellExecute = false;
-								info.CreateNoWindow = true;
-								info.RedirectStandardError = true;
-								info.RedirectStandardInput = true;
-								info.RedirectStandardOutput = true;
-								info.StandardErrorEncoding = Encoding.UTF8;
-								info.StandardOutputEncoding = Encoding.UTF8;
-				
-								Process process = new Process ();
-								process.StartInfo = info;
-								process.Start ();
-								process.WaitForExit (5000);
-								Thread.Sleep(5000);
-							}
+							result = GetSessionBusAddressFromSharedMemory (suffix);
 						}
 					}
 				}
