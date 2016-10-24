@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 
 namespace DBus.Transports
 {
@@ -62,11 +63,91 @@ namespace DBus.Transports
 			Stream.WriteByte (0);
 		}
 
+		public const int TOKEN_QUERY = 0X00000008;
+
+		enum TOKEN_INFORMATION_CLASS {
+			TokenUser = 1,
+			TokenGroups,
+			TokenPrivileges,
+			TokenOwner,
+			TokenPrimaryGroup,
+			TokenDefaultDacl,
+			TokenSource,
+			TokenType,
+			TokenImpersonationLevel,
+			TokenStatistics,
+			TokenRestrictedSids,
+			TokenSessionId
+		}
+
+		public struct TOKEN_USER {
+			public SID_AND_ATTRIBUTES User;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct SID_AND_ATTRIBUTES {
+			public IntPtr Sid;
+			public int Attributes;
+		}
+
+		[DllImport("advapi32.dll")]
+		static extern bool OpenProcessToken (IntPtr ProcessHandle,
+						     int DesiredAccess,
+						     ref IntPtr TokenHandle);
+
+		[DllImport("kernel32.dll")]
+		static extern IntPtr GetCurrentProcess ();
+
+		[DllImport("kernel32.dll")]
+		static extern bool CloseHandle(IntPtr handle);
+
+		[DllImport("advapi32.dll", SetLastError=true)]
+		static extern bool GetTokenInformation (IntPtr TokenHandle,
+							TOKEN_INFORMATION_CLASS TokenInformationClass,
+							IntPtr TokenInformation,
+							int TokenInformationLength,
+							ref int ReturnLength);
+
+                [DllImport("advapi32", CharSet=CharSet.Auto, SetLastError=true)]
+                static extern bool ConvertSidToStringSid(IntPtr pSID,
+                                                         out IntPtr ptrSid);
+
 		public override string AuthString ()
 		{
-			return OSHelpers.PlatformIsUnixoid ?
-				Mono.Unix.Native.Syscall.geteuid ().ToString ()                       // Unix User ID
-				: System.Security.Principal.WindowsIdentity.GetCurrent ().User.Value; // Windows User ID
+			// MONO do not support this:
+			// System.Security.Principal.WindowsIdentity.GetCurrent ().User.Value; // Windows User ID
+			if (!OSHelpers.PlatformIsUnixoid) 
+			{
+				IntPtr procToken = IntPtr.Zero;
+
+				if (!OpenProcessToken (GetCurrentProcess (), TOKEN_QUERY, ref procToken))
+					return String.Empty;
+
+				TOKEN_USER tokUser;
+				const int bufLength = 256;
+				IntPtr tu = Marshal.AllocHGlobal (bufLength);
+				int cb = bufLength;
+
+				if (!GetTokenInformation (procToken, TOKEN_INFORMATION_CLASS.TokenUser, tu, cb, ref cb)) 
+				{
+					Marshal.FreeHGlobal (tu);
+					return String.Empty;
+				}
+
+				tokUser = (TOKEN_USER)Marshal.PtrToStructure (tu, typeof(TOKEN_USER));
+				CloseHandle (procToken);
+
+				IntPtr ptrSid;
+				string StringSid;
+				ConvertSidToStringSid (tokUser.User.Sid, out ptrSid);
+				StringSid = Marshal.PtrToStringAuto(ptrSid);
+
+				Marshal.FreeHGlobal (tu);
+
+				return StringSid;
+			}
+
+			return Mono.Unix.Native.Syscall.geteuid ().ToString ();			
 		}
 	}
 }

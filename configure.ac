@@ -23,9 +23,9 @@ AC_SUBST(PKG_CONFIG)
 MONO_REQ_VERSION=1.1.13
 PKG_CHECK_MODULES(MONO, mono >= $MONO_REQ_VERSION)
 
-AC_PATH_PROG(GMCS, gmcs, no)
+AC_PATH_PROG(GMCS, mcs, no)
 if test "x$GMCS" = "xno"; then
-	AC_MSG_ERROR([You need to install gmcs])
+	AC_MSG_ERROR([You need to install mcs])
 fi
 AC_SUBST(GMCS)
 

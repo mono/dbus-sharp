@@ -1,13 +1,33 @@
 using System;
-
-#if !NET35
-using System.IO.MemoryMappedFiles;
-#endif
+using System.Runtime.InteropServices;
+using System.Reflection;
 
 namespace DBus
 {
 	internal class OSHelpers
 	{
+		enum FileRights : uint          // constants from winbase.h
+		{
+			Read = 4,
+			Write = 2,
+			ReadWrite = Read + Write
+		}
+
+		[DllImport ("kernel32.dll", SetLastError = true)]
+		static extern IntPtr OpenFileMapping (FileRights dwDesiredAccess,
+						      bool bInheritHandle,
+						      string lpName);
+		[DllImport ("kernel32.dll", SetLastError = true)]
+		static extern IntPtr MapViewOfFile (IntPtr hFileMappingObject,
+						    FileRights dwDesiredAccess,
+						    uint dwFileOffsetHigh,
+						    uint dwFileOffsetLow,
+						    uint dwNumberOfBytesToMap);
+		[DllImport ("Kernel32.dll")]
+		static extern bool UnmapViewOfFile (IntPtr map);
+
+		[DllImport ("kernel32.dll")]
+        	static extern int CloseHandle (IntPtr hObject);
 
 		static PlatformID platformid = Environment.OSVersion.Platform;
 
@@ -28,40 +48,23 @@ namespace DBus
 		}
 
 		// Reads a string from shared memory with the ID "id".
-		// Optionally, a maximum length can be specified. A negative number means "no limit".
-		public static string ReadSharedMemoryString (string id, long maxlen = -1)
+		public static string ReadSharedMemoryString (string id)
 		{
-#if !NET35
-			MemoryMappedFile shmem;
-			try {
-				shmem = MemoryMappedFile.OpenExisting (id);
-			} catch {
-				shmem = null;
+			string result = null;
+
+			IntPtr mapping = OpenFileMapping (FileRights.Read, false, id);
+			if (mapping != IntPtr.Zero) 
+			{
+				IntPtr p = MapViewOfFile (mapping, FileRights.Read, 0, 0, 0);
+				if (p != IntPtr.Zero) 
+				{
+					result = Marshal.PtrToStringAnsi (p);
+					UnmapViewOfFile (p);
+				}
 			}
-			if (shmem == null)
-				return null;
-			MemoryMappedViewStream s = shmem.CreateViewStream ();
-			long len = s.Length;
-			if (maxlen >= 0 && len > maxlen)
-				len = maxlen;
-			if (len == 0)
-				return string.Empty;
-			if (len > Int32.MaxValue)
-				len = Int32.MaxValue;
-			byte[] bytes = new byte[len];
-			int count = s.Read (bytes, 0, (int)len);
-			if (count <= 0)
-				return string.Empty;
+			CloseHandle (mapping);
 
-			count = 0;
-			while (count < len && bytes[count] != 0)
-				count++;
-
-			return System.Text.Encoding.UTF8.GetString (bytes, 0, count);
-#else
-			return null;
-#endif
+			return result;
 		}
-
 	}
 }
