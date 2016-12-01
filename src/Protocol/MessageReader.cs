@@ -479,12 +479,12 @@ namespace DBus.Protocol
 
 			if (endianness == Connection.NativeEndianness) {
 				Buffer.BlockCopy (data, pos, array, 0, (int)length);
-				pos += (int)length;
 			} else {
 				GCHandle handle = GCHandle.Alloc (array, GCHandleType.Pinned);
 				DirectCopy (sof, length, handle);
 				handle.Free ();
 			}
+			pos += (int)length;
 
 			return array;
 		}
@@ -504,8 +504,6 @@ namespace DBus.Protocol
 					for (int j = i; j < i + sof; j++)
 						ptr[2 * i - pos + (sof - 1) - j] = data[j];
 			}
-
-			pos += (int)length * sof;
 		}
 
 		bool[] MarshalBoolArray (uint length)
@@ -564,7 +562,9 @@ namespace DBus.Protocol
 			object strct = Activator.CreateInstance (structType);
 			int sof = Marshal.SizeOf (fis[0].FieldType);
 			GCHandle handle = GCHandle.Alloc (strct, GCHandleType.Pinned);
-			DirectCopy (sof, (uint)(fis.Length * sof), handle);
+			uint length = (uint)(fis.Length * sof);
+			DirectCopy (sof, length, handle);
+			pos += (int)length;
 			handle.Free ();
 
 			return strct;
