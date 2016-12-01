@@ -35,6 +35,31 @@ namespace DBus
 			return argName;
 		}
 
+		public static Type GetInterfaceType(Type type, string iface)
+		{
+			return type.GetInterfaces()
+				.Concat(GetHierarchy(type))
+				.FirstOrDefault (x => iface == GetInterfaceName (x));
+		}
+
+		private static IEnumerable<Type> GetHierarchy(Type type)
+		{
+			if (IsPublic (type)) {
+				yield return type;
+			}
+
+			foreach (var super in GetHierarchy (type.BaseType)) {
+				if (IsPublic (type)) {
+					yield return super;
+				}
+			}
+		}
+
+		public static IEnumerable<PropertyInfo> GetPublicProperties (Type type)
+		{
+			return type.GetProperties (BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+		}
+
 		public static IEnumerable<KeyValuePair<Type, MemberInfo>> GetPublicMembers (Type type)
 		{
 			//note that Type.GetInterfaces() returns all interfaces with flattened hierarchy
@@ -74,6 +99,7 @@ namespace DBus
 		public static MethodInfo GetMethod (Type type, MessageContainer method_call)
 		{
 			var mems = Mapper.GetPublicMembers (type).ToArray ();
+
 			foreach (var memberForType in mems) {
 				//this could be made more efficient by using the given interface name earlier and avoiding walking through all public interfaces
 				if (method_call.Interface != null)

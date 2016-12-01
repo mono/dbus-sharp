@@ -3,6 +3,7 @@
 // See COPYING for details
 
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Collections.Generic;
@@ -30,10 +31,13 @@ namespace DBus
 		static MethodInfo messageReaderReadArray = typeof (MessageReader).GetMethod ("ReadArray", Type.EmptyTypes);
 		static MethodInfo messageReaderReadDictionary = typeof (MessageReader).GetMethod ("ReadDictionary", Type.EmptyTypes);
 		static MethodInfo messageReaderReadStruct = typeof (MessageReader).GetMethod ("ReadStruct", Type.EmptyTypes);
+		static MethodInfo messageHelperGetDynamicValues = typeof (MessageHelper).GetMethod ("GetDynamicValues", new [] { typeof (Message) });
 
 		static Dictionary<Type,MethodInfo> writeMethods = new Dictionary<Type,MethodInfo> ();
 		static Dictionary<Type,object> typeWriters = new Dictionary<Type,object> ();
 
+		static MethodInfo sendPropertyGetMethod = typeof (BusObject).GetMethod ("SendPropertyGet");
+		static MethodInfo sendPropertySetMethod = typeof (BusObject).GetMethod ("SendPropertySet");
 		static MethodInfo sendMethodCallMethod = typeof (BusObject).GetMethod ("SendMethodCall");
 		static MethodInfo sendSignalMethod = typeof (BusObject).GetMethod ("SendSignal");
 		static MethodInfo toggleSignalMethod = typeof (BusObject).GetMethod ("ToggleSignal");
@@ -86,52 +90,44 @@ namespace DBus
 		{
 			typeB.AddInterfaceImplementation (iface);
 
-			Dictionary<string,MethodBuilder> builders = new Dictionary<string,MethodBuilder> ();
+			HashSet<MethodInfo> evaluation_set = new HashSet<MethodInfo> (iface.GetMethods ());
 
-			foreach (MethodInfo declMethod in iface.GetMethods ()) {
-				ParameterInfo[] parms = declMethod.GetParameters ();
-
-				Type[] parmTypes = new Type[parms.Length];
-				for (int i = 0 ; i < parms.Length ; i++)
-					parmTypes[i] = parms[i].ParameterType;
-
-				MethodAttributes attrs = declMethod.Attributes ^ MethodAttributes.Abstract;
-				attrs ^= MethodAttributes.NewSlot;
-				attrs |= MethodAttributes.Final;
-				MethodBuilder method_builder = typeB.DefineMethod (declMethod.Name, attrs, declMethod.ReturnType, parmTypes);
-				typeB.DefineMethodOverride (method_builder, declMethod);
-
-				//define in/out/ref/name for each of the parameters
-				for (int i = 0; i < parms.Length ; i++)
-					method_builder.DefineParameter (i + 1, parms[i].Attributes, parms[i].Name);
-
-				ILGenerator ilg = method_builder.GetILGenerator ();
-				GenHookupMethod (ilg, declMethod, sendMethodCallMethod, interfaceName, declMethod.Name);
-
-				if (declMethod.IsSpecialName)
-					builders[declMethod.Name] = method_builder;
+			foreach (PropertyInfo declProp in iface.GetProperties ()) {
+				GenHookupProperty (typeB, declProp, interfaceName, evaluation_set);
 			}
 
-			foreach (EventInfo declEvent in iface.GetEvents ())
-			{
-				EventBuilder event_builder = typeB.DefineEvent (declEvent.Name, declEvent.Attributes, declEvent.EventHandlerType);
-				event_builder.SetAddOnMethod (builders["add_" + declEvent.Name]);
-				event_builder.SetRemoveOnMethod (builders["remove_" + declEvent.Name]);
+			foreach (EventInfo declEvent in iface.GetEvents ()) {
+				GenHookupEvent (typeB, declEvent, interfaceName, evaluation_set);
 			}
 
-			foreach (PropertyInfo declProp in iface.GetProperties ())
-			{
-				List<Type> indexers = new List<Type> ();
-				foreach (ParameterInfo pi in declProp.GetIndexParameters ())
-					indexers.Add (pi.ParameterType);
-
-				PropertyBuilder prop_builder = typeB.DefineProperty (declProp.Name, declProp.Attributes, declProp.PropertyType, indexers.ToArray ());
-				MethodBuilder mb;
-				if (builders.TryGetValue ("get_" + declProp.Name, out mb))
-					prop_builder.SetGetMethod (mb);
-				if (builders.TryGetValue ("set_" + declProp.Name, out mb))
-					prop_builder.SetSetMethod (mb);
+			foreach (MethodInfo declMethod in evaluation_set) {
+				MethodBuilder builder = CreateMethodBuilder (typeB, declMethod);
+				ILGenerator ilg = builder.GetILGenerator ();
+				GenHookupMethod (ilg, declMethod, sendMethodCallMethod, Mapper.GetInterfaceName (iface), declMethod.Name);
 			}
+
+
+		}
+
+		public static MethodBuilder CreateMethodBuilder (TypeBuilder typeB, MethodInfo declMethod)
+		{
+			ParameterInfo[] parms = declMethod.GetParameters ();
+
+			Type[] parmTypes = new Type[parms.Length];
+			for (int i = 0 ; i < parms.Length ; i++)
+				parmTypes[i] = parms[i].ParameterType;
+
+			MethodAttributes attrs = declMethod.Attributes ^ MethodAttributes.Abstract;
+			attrs ^= MethodAttributes.NewSlot;
+			attrs |= MethodAttributes.Final;
+			MethodBuilder method_builder = typeB.DefineMethod (declMethod.Name, attrs, declMethod.ReturnType, parmTypes);
+			typeB.DefineMethodOverride (method_builder, declMethod);
+
+			//define in/out/ref/name for each of the parameters
+			for (int i = 0; i < parms.Length ; i++)
+				method_builder.DefineParameter (i + 1, parms[i].Attributes, parms[i].Name);
+
+			return method_builder;
 		}
 
 		public static DynamicMethod GetHookupMethod (EventInfo ei)
@@ -244,27 +240,93 @@ namespace DBus
 			return type.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 		}
 
-		public static void GenHookupMethod (ILGenerator ilg, MethodInfo declMethod, MethodInfo invokeMethod, string @interface, string member)
+		private static void EmitThis (ILGenerator ilg)
 		{
-			ParameterInfo[] parms = declMethod.GetParameters ();
-			Type retType = declMethod.ReturnType;
-
-			//the BusObject instance
+			//the 'this' instance
 			ilg.Emit (OpCodes.Ldarg_0);
 
 			ilg.Emit (OpCodes.Castclass, typeof (BusObject));
 
-			//interface
-			ilg.Emit (OpCodes.Ldstr, @interface);
+		}
 
-			//special case event add/remove methods
-			if (declMethod.IsSpecialName && (declMethod.Name.StartsWith ("add_") || declMethod.Name.StartsWith ("remove_"))) {
-				string[] parts = declMethod.Name.Split (new char[]{'_'}, 2);
-				string ename = parts[1];
+		public static void GenHookupProperty (TypeBuilder typeB, PropertyInfo declProp, string @interface, HashSet<MethodInfo> evaluating)
+		{
+			Type[] indexers = declProp.GetIndexParameters ().Select (x => x.ParameterType).ToArray ();
+			PropertyBuilder prop_builder = typeB.DefineProperty (declProp.Name, 
+									     declProp.Attributes, 
+									     declProp.PropertyType, 
+									     indexers);
 
-				bool adding = parts[0] == "add";
+			MethodInfo[] sources = new MethodInfo[] { declProp.GetGetMethod (),
+								  declProp.GetSetMethod () };
 
-				ilg.Emit (OpCodes.Ldstr, ename);
+			foreach (MethodInfo source in sources)
+			{
+				if (null == source)
+					continue;
+
+				evaluating.Remove (source);
+
+				MethodBuilder meth_builder = CreateMethodBuilder (typeB, source);
+				ILGenerator ilg = meth_builder.GetILGenerator ();
+
+				bool isGet = typeof(void) != source.ReturnType;
+
+				MethodInfo target = isGet ? sendPropertyGetMethod : sendPropertySetMethod;
+
+				EmitThis (ilg);
+
+				ilg.Emit (OpCodes.Ldstr, @interface);
+				ilg.Emit (OpCodes.Ldstr, declProp.Name);
+
+				if (!isGet)
+				{
+					ilg.Emit (OpCodes.Ldarg_1);
+					ilg.Emit (OpCodes.Box, source.GetParameters ()[0].ParameterType);
+				}
+
+				ilg.Emit (OpCodes.Tailcall);
+				ilg.Emit (target.IsFinal ? OpCodes.Call : OpCodes.Callvirt, target);
+
+				if (isGet)
+					ilg.Emit (source.ReturnType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, source.ReturnType);
+
+				ilg.Emit (OpCodes.Ret);
+
+				if (isGet)
+					prop_builder.SetGetMethod (meth_builder);
+				else
+					prop_builder.SetSetMethod (meth_builder);
+			}
+		}
+
+		public static void GenHookupEvent (TypeBuilder typeB, EventInfo declEvent, string @interface, HashSet<MethodInfo> evaluating)
+		{
+			EventBuilder event_builder = typeB.DefineEvent (declEvent.Name, 
+									declEvent.Attributes, 
+									declEvent.EventHandlerType);
+
+			MethodInfo[] sources = new MethodInfo[] { declEvent.GetAddMethod (),
+								  declEvent.GetRemoveMethod () };
+
+			foreach (MethodInfo source in sources)
+			{
+				if (null == source)
+					continue;
+
+				evaluating.Remove (source);
+
+				MethodBuilder meth_builder = CreateMethodBuilder (typeB, source);
+				ILGenerator ilg = meth_builder.GetILGenerator ();
+
+				bool adding = sources[0] == source;
+
+				EmitThis (ilg);
+
+				//interface
+				ilg.Emit (OpCodes.Ldstr, @interface);
+
+				ilg.Emit (OpCodes.Ldstr, declEvent.Name);
 
 				ilg.Emit (OpCodes.Ldarg_1);
 
@@ -273,16 +335,23 @@ namespace DBus
 				ilg.Emit (OpCodes.Tailcall);
 				ilg.Emit (toggleSignalMethod.IsFinal ? OpCodes.Call : OpCodes.Callvirt, toggleSignalMethod);
 				ilg.Emit (OpCodes.Ret);
-				return;
-			}
 
-			//property accessor mapping
-			if (declMethod.IsSpecialName) {
-				if (member.StartsWith ("get_"))
-					member = "Get" + member.Substring (4);
-				else if (member.StartsWith ("set_"))
-					member = "Set" + member.Substring (4);
+				if (adding)
+					event_builder.SetAddOnMethod (meth_builder);
+				else
+					event_builder.SetRemoveOnMethod (meth_builder);
 			}
+		}
+
+		public static void GenHookupMethod (ILGenerator ilg, MethodInfo declMethod, MethodInfo invokeMethod, string @interface, string member)
+		{
+			ParameterInfo[] parms = declMethod.GetParameters ();
+			Type retType = declMethod.ReturnType;
+
+			EmitThis (ilg);
+
+			//interface
+			ilg.Emit (OpCodes.Ldstr, @interface);
 
 			//member
 			ilg.Emit (OpCodes.Ldstr, member);
@@ -445,6 +514,163 @@ namespace DBus
 			return null;
 		}
 
+		internal static MethodCall GenMethodCall (MethodInfo target)
+		{
+			Signature inSig, outSig;
+			SigsForMethod (target, out inSig, out outSig);
+			return new MethodCall {
+				Out = outSig,
+				In = inSig,
+				Call = GenCaller (target),
+				MetaData = target
+			};
+		}
+
+		internal static PropertyCall GenPropertyCall (PropertyInfo target)
+		{
+			var pc = new PropertyCall {
+				Get = GenGetCall (target),
+				Set = GenSetCall (target),
+				MetaData = target
+			};
+
+			return pc;
+		}
+
+		internal static MethodCaller GenGetCall (PropertyInfo target)
+		{
+			var mi = target.GetGetMethod ();
+
+			if (null == mi) {
+				return null;
+			}
+
+			var parms = new Type[] {
+				typeof (object),
+				typeof (MessageReader),
+				typeof (Message),
+				typeof (MessageWriter)
+			};
+			var method = new DynamicMethod ("PropertyGet", typeof(void), parms, typeof(MessageReader));
+
+			var ilg = method.GetILGenerator ();
+
+			var retLocal = ilg.DeclareLocal (mi.ReturnType);
+
+			ilg.Emit (OpCodes.Ldarg_0);
+			ilg.EmitCall (mi.IsFinal ? OpCodes.Call : OpCodes.Callvirt, mi, null);
+			ilg.Emit (OpCodes.Stloc, retLocal);
+
+			ilg.Emit (OpCodes.Ldarg_3);
+			ilg.Emit (OpCodes.Ldloc, retLocal);
+			GenWriter (ilg, mi.ReturnType);
+
+			ilg.Emit (OpCodes.Ret);
+
+			return (MethodCaller) method.CreateDelegate (typeof(MethodCaller));
+		}
+
+		internal static MethodCaller GenSetCall (PropertyInfo target)
+		{
+			var mi = target.GetSetMethod ();
+
+			if (null == mi) {
+				return null;
+			}
+
+			var parms = new Type[] {
+				typeof (object),
+				typeof (MessageReader),
+				typeof (Message),
+				typeof (MessageWriter)
+			};
+			var method = new DynamicMethod ("PropertySet", typeof(void), parms, typeof(MessageReader));
+
+			var ilg = method.GetILGenerator ();
+
+			if (null == messageHelperGetDynamicValues) {
+				throw new MissingMethodException (typeof(MessageHelper).Name, "GetDynamicValues");
+			}
+
+			var args = ilg.DeclareLocal (typeof(object[]));
+			var arg = ilg.DeclareLocal (typeof(object));
+			var v = ilg.DeclareLocal (target.PropertyType);
+
+			ilg.Emit (OpCodes.Ldarg_2);
+			ilg.Emit (OpCodes.Call, messageHelperGetDynamicValues);
+			ilg.Emit (OpCodes.Stloc, args);
+
+			ilg.Emit (OpCodes.Ldloc, args);
+			ilg.Emit (OpCodes.Ldc_I4_2);
+			ilg.Emit (OpCodes.Ldelem, typeof(object));
+			ilg.Emit (OpCodes.Stloc, arg);
+
+			var cast = target.PropertyType.IsValueType
+				? OpCodes.Unbox_Any
+				: OpCodes.Castclass;
+
+			ilg.Emit (OpCodes.Ldloc, arg);
+			ilg.Emit (cast, target.PropertyType);
+			ilg.Emit (OpCodes.Stloc, v);
+
+			ilg.Emit (OpCodes.Ldarg_0);
+			ilg.Emit (OpCodes.Ldloc, v);
+			ilg.Emit (mi.IsFinal ? OpCodes.Call : OpCodes.Callvirt, mi);
+
+			ilg.Emit (OpCodes.Ret);
+
+			return (MethodCaller) method.CreateDelegate (typeof(MethodCaller));
+		}
+
+		internal static MethodCaller GenGetAllCall (Type @interface)
+		{
+			var parms = new Type[] {
+				typeof (object),
+				typeof (MessageReader),
+				typeof (Message),
+				typeof (MessageWriter)
+			};
+			var method = new DynamicMethod ("PropertyGetAll", typeof(void), parms, typeof(MessageReader));
+
+			var ilg = method.GetILGenerator ();
+			var dctT = typeof(Dictionary<string, object>);
+
+			var strObj = new [] { typeof(string), typeof(object) };
+			var dctConstructor = dctT.GetConstructor (new Type[0]);
+			var dctAdd = dctT.GetMethod ("Add", strObj);
+
+			var accessors = @interface.GetProperties ().Where (x => null != x.GetGetMethod());
+
+			var dct = ilg.DeclareLocal (dctT);
+			var val = ilg.DeclareLocal (typeof(object));
+
+			ilg.Emit (OpCodes.Newobj, dctConstructor);
+			ilg.Emit (OpCodes.Stloc, dct);
+			foreach (var property in accessors) {
+				var mi = property.GetGetMethod ();
+
+				ilg.Emit (OpCodes.Ldarg_0);
+				ilg.Emit (mi.IsFinal ? OpCodes.Call : OpCodes.Callvirt, mi);
+				if (mi.ReturnType.IsValueType) {
+					ilg.Emit (OpCodes.Box, mi.ReturnType);
+				}
+				// TODO: Cast object references to typeof(object)?
+				ilg.Emit (OpCodes.Stloc, val);
+
+				ilg.Emit (OpCodes.Ldloc, dct);
+				ilg.Emit (OpCodes.Ldstr, property.Name);
+				ilg.Emit (OpCodes.Ldloc, val);
+				ilg.Emit (OpCodes.Call, dctAdd);
+			}
+			ilg.Emit (OpCodes.Ldarg_3);
+			ilg.Emit (OpCodes.Ldloc, dct);
+			GenWriter (ilg, dctT);
+
+			ilg.Emit (OpCodes.Ret);
+
+			return (MethodCaller) method.CreateDelegate (typeof(MethodCaller));
+		}
+
 		internal static MethodCaller GenCaller (MethodInfo target)
 		{
 			DynamicMethod hookupMethod = GenReadMethod (target);
@@ -562,6 +788,51 @@ namespace DBus
 		{
 			ilg.Emit (OpCodes.Ldtoken, t);
 			ilg.Emit (OpCodes.Call, getTypeFromHandleMethod);
+		}
+	}
+
+	internal static class MethodBaseExtensions {
+
+		static IDictionary<Type, HashSet<MethodBase>> events = new Dictionary<Type, HashSet<MethodBase>>();
+		static IDictionary<Type, HashSet<MethodBase>> properties = new Dictionary<Type, HashSet<MethodBase>>();
+
+		private static void InitialiseType (Type type)
+		{
+			lock (typeof(MethodBaseExtensions)) {
+				if (events.ContainsKey (type) && properties.ContainsKey (type))
+					return;
+
+				events [type]     = new HashSet<MethodBase>();
+				properties [type] = new HashSet<MethodBase>();
+
+				type.GetEvents ().Aggregate (events [type], (set, evt) => {
+					set.Add (evt.GetAddMethod ());
+					set.Add (evt.GetRemoveMethod ());
+					return set;
+				});
+				type.GetProperties ().Aggregate (properties [type], (set, prop) => {
+					set.Add (prop.GetGetMethod ());
+					set.Add (prop.GetSetMethod ());
+					return set;
+				});
+
+				events [type].Remove (null);
+				properties [type].Remove (null);
+			}
+		}
+
+		public static bool IsEvent (this MethodBase method)
+		{
+			InitialiseType (method.DeclaringType);
+			HashSet<MethodBase> methods = events [method.DeclaringType];
+			return methods.Contains (method);
+		}
+
+		public static bool IsProperty (this MethodBase method)
+		{
+			InitialiseType (method.DeclaringType);
+			HashSet<MethodBase> methods = properties [method.DeclaringType];
+			return methods.Contains (method);
 		}
 	}
 
