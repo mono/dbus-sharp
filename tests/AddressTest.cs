@@ -61,8 +61,7 @@ namespace DBus.Tests
 			Assert.AreEqual (1, entry.Properties.Count);
 
 			UUID expectedId = UUID.Parse ("50ab33155e2cdd289e58c42a497ded1e");
-			uint expectedTimestamp = 1232989470;
-			Assert.AreEqual (expectedTimestamp, expectedId.UnixTimestamp);
+
 			Assert.AreEqual (expectedId, entry.GUID);
 		}
 
@@ -74,7 +73,7 @@ namespace DBus.Tests
 
 			HashSet<int> hs = new HashSet<int> ();
 			for (int i = 0 ; i != n ; i++)
-				Assert.IsTrue (hs.Add (UUID.Generate (dt).GetHashCode ()));
+				Assert.IsTrue (hs.Add (UUID.Generate ().GetHashCode ()));
 		}
 	}
 }
