@@ -505,7 +505,7 @@ namespace DBus.Protocol
 						ptr[2 * i - pos + (sof - 1) - j] = data[j];
 			}
 
-			pos += (int)length * sof;
+			pos += (int)length;
 		}
 
 		bool[] MarshalBoolArray (uint length)
