@@ -636,6 +636,9 @@ namespace DBus.Protocol
 			if (type.IsArray)
 				return DType.Array;
 
+			if (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(IDictionary<,>) || type.GetGenericTypeDefinition() == typeof(Dictionary<,>)))
+				return DType.Array;
+
 			//if (type.UnderlyingSystemType != null)
 			//	return TypeToDType (type.UnderlyingSystemType);
 			if (Mapper.IsPublic (type))
