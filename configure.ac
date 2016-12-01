@@ -27,7 +27,7 @@ AC_PATH_PROG(MCS, mcs, no)
 if test "x$MCS" = "xno"; then
 	AC_MSG_ERROR([You need to install mcs])
 fi
-AC_SUBST(GMCS)
+AC_SUBST(MCS)
 
 AC_PATH_PROG(GACUTIL, gacutil, no)
 if test "x$GACUTIL" = "xno"; then
