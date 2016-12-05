@@ -3,6 +3,7 @@
 // See COPYING for details
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using org.freedesktop.DBus;
 
@@ -98,7 +99,7 @@ namespace DBus
 		{
 			if (busName == DBusName)
 				return true;
-			return NameHasOwner (busName);
+			return NameHasOwner (busName) || bus.ListActivatableNames ().Contains (busName);
 		}
 
 		public ulong GetUnixUser (string name)
