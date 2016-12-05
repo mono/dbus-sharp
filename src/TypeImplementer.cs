@@ -3,6 +3,7 @@
 // See COPYING for details
 
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Collections.Generic;
@@ -108,7 +109,8 @@ namespace DBus
 				ILGenerator ilg = method_builder.GetILGenerator ();
 				GenHookupMethod (ilg, declMethod, sendMethodCallMethod, interfaceName, declMethod.Name);
 
-				if (declMethod.IsSpecialName)
+				// Is Event Or Property
+				if (declMethod.IsEvent () || declMethod.IsProperty ())
 					builders[declMethod.Name] = method_builder;
 			}
 
@@ -258,7 +260,7 @@ namespace DBus
 			ilg.Emit (OpCodes.Ldstr, @interface);
 
 			//special case event add/remove methods
-			if (declMethod.IsSpecialName && (declMethod.Name.StartsWith ("add_") || declMethod.Name.StartsWith ("remove_"))) {
+			if (declMethod.IsEvent () && (declMethod.Name.StartsWith ("add_") || declMethod.Name.StartsWith ("remove_"))) {
 				string[] parts = declMethod.Name.Split (new char[]{'_'}, 2);
 				string ename = parts[1];
 
@@ -562,6 +564,51 @@ namespace DBus
 		{
 			ilg.Emit (OpCodes.Ldtoken, t);
 			ilg.Emit (OpCodes.Call, getTypeFromHandleMethod);
+		}
+	}
+
+	internal static class MethodBaseExtensions {
+
+		static IDictionary<Type, HashSet<MethodBase>> events = new Dictionary<Type, HashSet<MethodBase>>();
+		static IDictionary<Type, HashSet<MethodBase>> properties = new Dictionary<Type, HashSet<MethodBase>>();
+
+		private static void InitialiseType (Type type)
+		{
+			lock (typeof(MethodBaseExtensions)) {
+				if (events.ContainsKey (type) && properties.ContainsKey (type))
+					return;
+
+				events [type]     = new HashSet<MethodBase>();
+				properties [type] = new HashSet<MethodBase>();
+
+				type.GetEvents ().Aggregate (events [type], (set, evt) => {
+					set.Add (evt.GetAddMethod ());
+					set.Add (evt.GetRemoveMethod ());
+					return set;
+				});
+				type.GetProperties ().Aggregate (properties [type], (set, prop) => {
+					set.Add (prop.GetGetMethod ());
+					set.Add (prop.GetSetMethod ());
+					return set;
+				});
+
+				events [type].Remove (null);
+				properties [type].Remove (null);
+			}
+		}
+
+		public static bool IsEvent (this MethodBase method)
+		{
+			InitialiseType (method.DeclaringType);
+			HashSet<MethodBase> methods = events [method.DeclaringType];
+			return methods.Contains (method);
+		}
+
+		public static bool IsProperty (this MethodBase method)
+		{
+			InitialiseType (method.DeclaringType);
+			HashSet<MethodBase> methods = properties [method.DeclaringType];
+			return methods.Contains (method);
 		}
 	}
 
