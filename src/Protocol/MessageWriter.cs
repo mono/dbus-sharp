@@ -341,6 +341,8 @@ namespace DBus.Protocol
 
 			Type type = val.GetType ();
 			
+			//TODO: Take a look at TypeImplementer
+			// and understand why does this happens
 			if (type.IsArray) {
 				Write(type, val);
 			}
