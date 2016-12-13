@@ -340,8 +340,13 @@ namespace DBus.Protocol
 			}
 
 			Type type = val.GetType ();
-
-			WriteVariant (type, val);
+			
+			if (type.IsArray) {
+				Write(type, val);
+			}
+			else{
+				WriteVariant (type, val);
+			}
 		}
 
 		public void WriteVariant (Type type, object val)
