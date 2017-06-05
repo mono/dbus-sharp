@@ -13,7 +13,7 @@
     <RootNamespace>DBus</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\dbus-sharp.snk</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -47,6 +47,7 @@
     <Compile Include="BusObject.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="DBus.cs" />
+    <Compile Include="DisposableList.cs" />
     <Compile Include="DProxy.cs" />
     <Compile Include="ExportObject.cs" />
     <Compile Include="Introspection.cs" />
@@ -57,6 +58,7 @@
     <Compile Include="ObjectPath.cs" />
     <Compile Include="BusException.cs" />
     <Compile Include="AddressEntry.cs" />
+    <Compile Include="UnixFD.cs" />
     <Compile Include="Protocol\DBusStruct.cs" />
     <Compile Include="Protocol\DType.cs" />
     <Compile Include="Protocol\DValue.cs" />
@@ -77,9 +79,12 @@
     <Compile Include="Protocol\Signature.cs" />
     <Compile Include="Protocol\SocketTransport.cs" />
     <Compile Include="Protocol\Transport.cs" />
+    <Compile Include="Protocol\UnixFDArray.cs" />
     <Compile Include="Transports\UnixNativeTransport.cs" />
+    <Compile Include="Transports\UnixSendmsgTransport.cs" />
     <Compile Include="Transports\UnixTransport.cs" />
     <Compile Include="Unix\UnixStream.cs" />
+    <Compile Include="Unix\UnixMonoStream.cs" />
     <Compile Include="Unix\UnixError.cs" />
     <Compile Include="Unix\UnixSocket.cs" />
     <Compile Include="AssemblyInfo.cs" />

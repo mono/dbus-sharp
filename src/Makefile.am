@@ -9,6 +9,7 @@ CSFILES = Address.cs \
 	BusObject.cs \
 	Connection.cs \
 	DBus.cs \
+	DisposableList.cs \
 	DProxy.cs \
 	ExportObject.cs \
 	Introspection.cs \
@@ -19,6 +20,7 @@ CSFILES = Address.cs \
 	OSHelpers.cs \
 	BusException.cs \
 	AddressEntry.cs \
+	UnixFD.cs \
 	Protocol/DBusStruct.cs \
 	Protocol/DType.cs \
 	Protocol/DValue.cs \
@@ -39,9 +41,12 @@ CSFILES = Address.cs \
 	Protocol/Signature.cs \
 	Protocol/SocketTransport.cs \
 	Protocol/Transport.cs \
+	Protocol/UnixFDArray.cs \
 	Transports/UnixNativeTransport.cs \
+	Transports/UnixSendmsgTransport.cs \
 	Transports/UnixTransport.cs \
 	Unix/UnixStream.cs \
+	Unix/UnixMonoStream.cs \
 	Unix/UnixError.cs \
 	Unix/UnixSocket.cs \
 	AssemblyInfo.cs

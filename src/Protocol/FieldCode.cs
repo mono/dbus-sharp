@@ -18,6 +18,7 @@ namespace DBus.Protocol
 		Destination,
 		Sender,
 		Signature,
+		UnixFDs,
 #if PROTO_REPLY_SIGNATURE
 		ReplySignature, //note: not supported in dbus
 #endif

@@ -97,15 +97,18 @@ namespace DBus
 			}
 
 			Signature inSig, outSig;
-			TypeImplementer.SigsForMethod (mi, out inSig, out outSig);
+			bool hasDisposableList;
+			TypeImplementer.SigsForMethod (mi, out inSig, out outSig, out hasDisposableList);
 
 			Message msg = method_call.Message;
 			MessageReader msgReader = new MessageReader (msg);
 			MessageWriter retWriter = new MessageWriter ();
 
+			using (var disposableList = new DisposableList ()) {
+
 			Exception raisedException = null;
 			try {
-				mCaller (Object, msgReader, msg, retWriter);
+				mCaller (Object, msgReader, msg, retWriter, disposableList);
 			} catch (Exception e) {
 				raisedException = e;
 			}
@@ -142,6 +145,7 @@ namespace DBus
 				replyMsg.Header[FieldCode.Destination] = method_call.Sender;
 
 			conn.Send (replyMsg);
+			}
 		}
 
 		public object Object {

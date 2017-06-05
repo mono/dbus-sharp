@@ -24,6 +24,7 @@ namespace DBus.Protocol
 		String = (byte)'s',
 		ObjectPath = (byte)'o',
 		Signature = (byte)'g',
+		UnixFD = (byte)'h',
 
 		Array = (byte)'a',
 		Variant = (byte)'v',

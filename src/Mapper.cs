@@ -164,6 +164,8 @@ namespace DBus
 			//TODO: consider InOut/Ref
 
 			for (int i = 0 ; i != parms.Length ; i++) {
+				if (i == 0 && parms[i].ParameterType == typeof (DisposableList))
+					continue;
 				switch (dir) {
 					case ArgDirection.In:
 						//docs say IsIn isn't reliable, and this is indeed true

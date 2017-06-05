@@ -96,6 +96,9 @@ namespace DBus.Protocol
 			} else if (type == typeof (string)) {
 				readValueCache[type] = () => ReadString ();
 				return ReadString ();
+			} else if (type == typeof (UnixFD)) {
+				readValueCache[type] = () => ReadUnixFD ();
+				return ReadUnixFD ();
 			} else if (type.IsGenericType && (type.GetGenericTypeDefinition () == typeof (Dictionary<,>) || type.GetGenericTypeDefinition() == typeof(IDictionary<,>))) {
 				Type[] genArgs = type.GetGenericArguments ();
 				readValueCache[type] = () => ReadDictionary (genArgs[0], genArgs[1]);
@@ -356,6 +359,18 @@ namespace DBus.Protocol
 			ReadNull ();
 
 			return val;
+		}
+
+		public UnixFD ReadUnixFD ()
+		{
+			uint index = ReadUInt32 ();
+
+			if (message.UnixFDArray == null)
+				throw new Exception ("Trying to read a UnixFD value but unix fd transfer not supported");
+			if (index >= message.UnixFDArray.FDs.Count)
+				throw new Exception ("UnixFD index " + index + " out of range (got " + message.UnixFDArray.FDs.Count + " fds)");
+			
+			return message.UnixFDArray.FDs[(int)index];
 		}
 
 		public ObjectPath ReadObjectPath ()

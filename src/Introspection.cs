@@ -121,11 +121,15 @@ namespace DBus
 
 		public void WriteArg (ParameterInfo pi)
 		{
+			if (pi.Position == 0 && pi.ParameterType == typeof (DisposableList))
+				return;
 			WriteArg (pi.ParameterType, Mapper.GetArgumentName (pi), pi.IsOut, false);
 		}
 
 		public void WriteArgReverse (ParameterInfo pi)
 		{
+			if (pi.Position == 0 && pi.ParameterType == typeof (DisposableList))
+				return;
 			WriteArg (pi.ParameterType, Mapper.GetArgumentName (pi), pi.IsOut, true);
 		}
 

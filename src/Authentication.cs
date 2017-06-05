@@ -324,6 +324,8 @@ namespace DBus.Authentication
 	class SaslClient : SaslPeer
 	{
 		public string Identity = String.Empty;
+		public bool TransportSupportsUnixFD = false;
+		public bool UnixFDSupported = false;
 
 		//static Regex rejectedRegex = new Regex (@"^REJECTED(\s+(\w+))*$");
 
@@ -386,6 +388,14 @@ namespace DBus.Authentication
 					ActualId = UUID.Zero;
 				else
 					ActualId = UUID.Parse (reply[1]);
+
+				if (TransportSupportsUnixFD) {
+					yield return new AuthCommand ("NEGOTIATE_UNIX_FD");
+					if (!replies.MoveNext ())
+						yield break;
+					reply = replies.Current;
+					UnixFDSupported = reply[0] == "AGREE_UNIX_FD";
+				}
 
 				yield return new AuthCommand ("BEGIN");
 				yield break;

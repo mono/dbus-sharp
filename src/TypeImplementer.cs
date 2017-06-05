@@ -34,8 +34,8 @@ namespace DBus
 		static Dictionary<Type,MethodInfo> writeMethods = new Dictionary<Type,MethodInfo> ();
 		static Dictionary<Type,object> typeWriters = new Dictionary<Type,object> ();
 
-		static MethodInfo sendMethodCallMethod = typeof (BusObject).GetMethod ("SendMethodCall");
-		static MethodInfo sendSignalMethod = typeof (BusObject).GetMethod ("SendSignal");
+		static MethodInfo sendMethodCallMethod = typeof (BusObject).GetMethod ("SendMethodCall", new Type[] { typeof (string), typeof (string), typeof (string), typeof (MessageWriter), typeof (Type), typeof (DisposableList), typeof (Exception).MakeByRefType () });
+		static MethodInfo sendSignalMethod = typeof (BusObject).GetMethod ("SendSignal", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof (string), typeof (string), typeof (string), typeof (MessageWriter), typeof (Type), typeof (DisposableList), typeof (Exception).MakeByRefType () }, null);
 		static MethodInfo toggleSignalMethod = typeof (BusObject).GetMethod ("ToggleSignal");
 
 		static Dictionary<EventInfo,DynamicMethod> hookup_methods = new Dictionary<EventInfo,DynamicMethod> ();
@@ -290,7 +290,8 @@ namespace DBus
 			//signature
 			Signature inSig;
 			Signature outSig;
-			SigsForMethod (declMethod, out inSig, out outSig);
+			bool hasDisposableList;
+			SigsForMethod (declMethod, out inSig, out outSig, out hasDisposableList);
 
 			ilg.Emit (OpCodes.Ldstr, inSig.Value);
 
@@ -300,6 +301,8 @@ namespace DBus
 
 			foreach (ParameterInfo parm in parms)
 			{
+				if (hasDisposableList && parm.Position == 0)
+					continue;
 				if (parm.IsOut)
 					continue;
 
@@ -337,6 +340,12 @@ namespace DBus
 
 			//the expected return Type
 			GenTypeOf (ilg, retType);
+
+			// The DisposableList object to which returned unix FDs will be added
+			if (hasDisposableList)
+				ilg.Emit (OpCodes.Ldarg_1);
+			else
+				ilg.Emit (OpCodes.Ldnull);
 
 			LocalBuilder exc = ilg.DeclareLocal (typeof (Exception));
 			ilg.Emit (OpCodes.Ldloca_S, exc);
@@ -402,16 +411,21 @@ namespace DBus
 		}
 
 
-		public static bool SigsForMethod (MethodInfo mi, out Signature inSig, out Signature outSig)
+		public static bool SigsForMethod (MethodInfo mi, out Signature inSig, out Signature outSig, out bool hasDisposableList)
 		{
 			inSig = Signature.Empty;
 			outSig = Signature.Empty;
+			hasDisposableList = false;
 
+			bool first = true;
 			foreach (ParameterInfo parm in mi.GetParameters ()) {
-				if (parm.IsOut)
+				if (first && !parm.IsOut && parm.ParameterType == typeof (DisposableList))
+					hasDisposableList = true;
+				else if (parm.IsOut)
 					outSig += Signature.GetSig (parm.ParameterType.GetElementType ());
 				else
 					inSig += Signature.GetSig (parm.ParameterType);
+				first = false;
 			}
 
 			outSig += Signature.GetSig (mi.ReturnType);
@@ -454,7 +468,7 @@ namespace DBus
 
 		internal static DynamicMethod GenReadMethod (MethodInfo target)
 		{
-			Type[] parms = new Type[] { typeof (object), typeof (MessageReader), typeof (Message), typeof (MessageWriter) };
+			Type[] parms = new Type[] { typeof (object), typeof (MessageReader), typeof (Message), typeof (MessageWriter), typeof (DisposableList) };
 			DynamicMethod hookupMethod = new DynamicMethod ("Caller", typeof (void), parms, typeof (MessageReader));
 			Gen (hookupMethod, target);
 			return hookupMethod;
@@ -473,8 +487,12 @@ namespace DBus
 			Dictionary<ParameterInfo,LocalBuilder> locals = new Dictionary<ParameterInfo,LocalBuilder> ();
 
 			foreach (ParameterInfo parm in parms) {
-
 				Type parmType = parm.ParameterType;
+
+				if (parm.Position == 0 && !parm.IsOut && parmType == typeof (DisposableList)) {
+					ilg.Emit (OpCodes.Ldarg, 4); // disposableList
+					continue;
+				}
 
 				if (parm.IsOut) {
 					LocalBuilder parmLocal = ilg.DeclareLocal (parmType.GetElementType ());
@@ -567,5 +585,5 @@ namespace DBus
 
 	internal delegate void TypeWriter<T> (MessageWriter writer, T value);
 
-	internal delegate void MethodCaller (object instance, MessageReader rdr, Message msg, MessageWriter ret);
+	internal delegate void MethodCaller (object instance, MessageReader rdr, Message msg, MessageWriter ret, DisposableList disposableList);
 }
