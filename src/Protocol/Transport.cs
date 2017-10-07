@@ -40,7 +40,14 @@ namespace DBus.Transports
 				case "unix":
 				{
 					if (OSHelpers.PlatformIsUnixoid) {
-						Transport transport = new UnixNativeTransport ();
+						Transport transport;
+						if (UnixSendmsgTransport.Available ()) {
+							transport = new UnixSendmsgTransport ();
+						} else {
+							if (ProtocolInformation.Verbose)
+								Console.Error.WriteLine ("Warning: Syscall.sendmsg() not available, transfering unix FDs will not work");
+							transport = new UnixNativeTransport ();
+						}
 						transport.Open (entry);
 						return transport;
 					}
@@ -153,6 +160,13 @@ namespace DBus.Transports
 
 			try {
 				msg = ReadMessageReal ();
+				if (msg == null) {
+					if (connection.IsConnected) {
+						if (ProtocolInformation.Verbose)
+							Console.Error.WriteLine ("Warning: The dbus daemon closed the connection");
+					}
+					connection.IsConnected = false;
+				}
 			} catch (IOException e) {
 				if (ProtocolInformation.Verbose)
 					Console.Error.WriteLine (e.Message);
@@ -166,7 +180,7 @@ namespace DBus.Transports
 			return msg;
 		}
 
-		int Read (byte[] buffer, int offset, int count)
+		internal virtual int Read (byte[] buffer, int offset, int count, UnixFDArray fdArray)
 		{
 			int read = 0;
 			while (read < count) {
@@ -186,6 +200,7 @@ namespace DBus.Transports
 		{
 			byte[] header = null;
 			byte[] body = null;
+			UnixFDArray fdArray = Connection.UnixFDSupported ? new UnixFDArray () : null;
 
 			int read;
 
@@ -194,7 +209,7 @@ namespace DBus.Transports
 				readBuffer = new byte[16];
 			byte[] hbuf = readBuffer;
 
-			read = Read (hbuf, 0, 16);
+			read = Read (hbuf, 0, 16, fdArray);
 
 			if (read == 0)
 				return null;
@@ -235,7 +250,7 @@ namespace DBus.Transports
 			header = new byte[16 + toRead];
 			Array.Copy (hbuf, header, 16);
 
-			read = Read (header, 16, toRead);
+			read = Read (header, 16, toRead, fdArray);
 
 			if (read != toRead)
 				throw new Exception ("Message header length mismatch: " + read + " of expected " + toRead);
@@ -244,13 +259,13 @@ namespace DBus.Transports
 			if (bodyLen != 0) {
 				body = new byte[bodyLen];
 
-				read = Read (body, 0, bodyLen);
+				read = Read (body, 0, bodyLen, fdArray);
 
 				if (read != bodyLen)
 					throw new Exception ("Message body length mismatch: " + read + " of expected " + bodyLen);
 			}
 
-			Message msg = Message.FromReceivedBytes (Connection, header, body);
+			Message msg = Message.FromReceivedBytes (Connection, header, body, fdArray);
 
 			return msg;
 		}
@@ -264,5 +279,10 @@ namespace DBus.Transports
 				stream.Flush ();
 			}
 		}
+
+		// Returns true if then transport supports unix FDs, even when the
+		// actual connection doesn't (e.g. because the daemon doesn't support
+		// it)
+		internal virtual bool TransportSupportsUnixFD { get { return false; } }
 	}
 }

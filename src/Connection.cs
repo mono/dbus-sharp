@@ -29,6 +29,7 @@ namespace DBus
 		bool isShared = false;
 		UUID Id = UUID.Zero;
 		bool isAuthenticated = false;
+		bool unixFDSupported = false;
 		int serial = 0;
 
 		// STRONG TODO: GET RID OF THAT SHIT
@@ -70,6 +71,12 @@ namespace DBus
 		internal bool IsAuthenticated {
 			get {
 				return isAuthenticated;
+			}
+		}
+
+		public bool UnixFDSupported {
+			get {
+				return unixFDSupported;
 			}
 		}
 
@@ -145,6 +152,8 @@ namespace DBus
 				transport.WriteCred ();
 
 			SaslClient auth = new SaslClient ();
+			if (transport != null)
+				auth.TransportSupportsUnixFD = transport.TransportSupportsUnixFD;
 			auth.Identity = transport.AuthString ();
 			auth.stream = transport.Stream;
 			auth.Peer = new SaslPeer ();
@@ -162,6 +171,7 @@ namespace DBus
 				Id = auth.ActualId;
 
 			isAuthenticated = true;
+			unixFDSupported = auth.UnixFDSupported;
 		}
 
 		// Interlocked.Increment() handles the overflow condition for uint correctly,
@@ -171,13 +181,13 @@ namespace DBus
 			return (uint)Interlocked.Increment (ref serial);
 		}
 
-		internal Message SendWithReplyAndBlock (Message msg)
+		internal Message SendWithReplyAndBlock (Message msg, bool keepFDs)
 		{
-			PendingCall pending = SendWithReply (msg);
+			PendingCall pending = SendWithReply (msg, keepFDs);
 			return pending.Reply;
 		}
 
-		internal PendingCall SendWithReply (Message msg)
+		internal PendingCall SendWithReply (Message msg, bool keepFDs)
 		{
 			msg.ReplyExpected = true;
 
@@ -186,7 +196,7 @@ namespace DBus
 
 			// Should we throttle the maximum number of concurrent PendingCalls?
 			// Should we support timeouts?
-			PendingCall pending = new PendingCall (this);
+			PendingCall pending = new PendingCall (this, keepFDs);
 			lock (pendingCalls)
 				pendingCalls[msg.Header.Serial] = pending;
 
@@ -211,7 +221,11 @@ namespace DBus
 			lock (inbound) {
 				while (inbound.Count != 0) {
 					Message msg = inbound.Dequeue ();
-					HandleSignal (msg);
+					try {
+						HandleSignal (msg);
+					} finally {
+						msg.Dispose ();
+					}
 				}
 			}
 		}
@@ -233,54 +247,66 @@ namespace DBus
 			if (msg == null)
 				throw new ArgumentNullException ("msg", "Cannot handle a null message; maybe the bus was disconnected");
 
-			//TODO: Restrict messages to Local ObjectPath?
+			bool cleanupFDs = true;
+			try {
 
-			{
-				object field_value = msg.Header[FieldCode.ReplySerial];
-				if (field_value != null) {
-					uint reply_serial = (uint)field_value;
-					PendingCall pending;
+				//TODO: Restrict messages to Local ObjectPath?
 
-					lock (pendingCalls) {
-						if (pendingCalls.TryGetValue (reply_serial, out pending)) {
-							if (pendingCalls.Remove (reply_serial))
-								pending.Reply = msg;
+				{
+					object field_value = msg.Header[FieldCode.ReplySerial];
+					if (field_value != null) {
+						uint reply_serial = (uint)field_value;
+						PendingCall pending;
 
-							return;
+						lock (pendingCalls) {
+							if (pendingCalls.TryGetValue (reply_serial, out pending)) {
+								if (pendingCalls.Remove (reply_serial)) {
+									pending.Reply = msg;
+									if (pending.KeepFDs)
+										cleanupFDs = false; // caller is responsible for closing FDs
+								}
+
+								return;
+							}
 						}
+
+						//we discard reply messages with no corresponding PendingCall
+						if (ProtocolInformation.Verbose)
+							Console.Error.WriteLine ("Unexpected reply message received: MessageType='" + msg.Header.MessageType + "', ReplySerial=" + reply_serial);
+
+						return;
 					}
-
-					//we discard reply messages with no corresponding PendingCall
-					if (ProtocolInformation.Verbose)
-						Console.Error.WriteLine ("Unexpected reply message received: MessageType='" + msg.Header.MessageType + "', ReplySerial=" + reply_serial);
-
-					return;
 				}
-			}
 
-			switch (msg.Header.MessageType) {
-				case MessageType.MethodCall:
-					MessageContainer method_call = MessageContainer.FromMessage (msg);
-					HandleMethodCall (method_call);
-					break;
-				case MessageType.Signal:
-					//HandleSignal (msg);
-					lock (inbound)
-						inbound.Enqueue (msg);
-					break;
-				case MessageType.Error:
-					//TODO: better exception handling
-					MessageContainer error = MessageContainer.FromMessage (msg);
-					string errMsg = String.Empty;
-					if (msg.Signature.Value.StartsWith ("s")) {
-						MessageReader reader = new MessageReader (msg);
-						errMsg = reader.ReadString ();
-					}
-					Console.Error.WriteLine ("Remote Error: Signature='" + msg.Signature.Value + "' " + error.ErrorName + ": " + errMsg);
-					break;
-				case MessageType.Invalid:
-				default:
-					throw new Exception ("Invalid message received: MessageType='" + msg.Header.MessageType + "'");
+				switch (msg.Header.MessageType) {
+					case MessageType.MethodCall:
+						MessageContainer method_call = MessageContainer.FromMessage (msg);
+						HandleMethodCall (method_call);
+						break;
+					case MessageType.Signal:
+						//HandleSignal (msg);
+						lock (inbound)
+							inbound.Enqueue (msg);
+						cleanupFDs = false; // FDs are closed after signal is handled
+						break;
+					case MessageType.Error:
+						//TODO: better exception handling
+						MessageContainer error = MessageContainer.FromMessage (msg);
+						string errMsg = String.Empty;
+						if (msg.Signature.Value.StartsWith ("s")) {
+							MessageReader reader = new MessageReader (msg);
+							errMsg = reader.ReadString ();
+						}
+						Console.Error.WriteLine ("Remote Error: Signature='" + msg.Signature.Value + "' " + error.ErrorName + ": " + errMsg);
+						break;
+					case MessageType.Invalid:
+					default:
+						throw new Exception ("Invalid message received: MessageType='" + msg.Header.MessageType + "'");
+				}
+
+			} finally {
+				if (cleanupFDs)
+					msg.Dispose ();
 			}
 		}
 
@@ -303,9 +329,10 @@ namespace DBus
 
 				bool compatible = false;
 				Signature inSig, outSig;
+				bool hasDisposableList;
 
-				if (TypeImplementer.SigsForMethod(mi, out inSig, out outSig))
-					if (outSig == Signature.Empty && inSig == msg.Signature)
+				if (TypeImplementer.SigsForMethod(mi, out inSig, out outSig, out hasDisposableList))
+					if (outSig == Signature.Empty && inSig == msg.Signature && !hasDisposableList)
 						compatible = true;
 
 				if (!compatible) {

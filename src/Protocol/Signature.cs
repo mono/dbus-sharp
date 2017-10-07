@@ -25,6 +25,7 @@ namespace DBus.Protocol
 		public static readonly Signature UInt16Sig = Allocate (DType.UInt16);
 		public static readonly Signature UInt32Sig = Allocate (DType.UInt32);
 		public static readonly Signature StringSig = Allocate (DType.String);
+		public static readonly Signature UnixFDSig = Allocate (DType.UnixFD);
 		public static readonly Signature StructBegin = Allocate (DType.StructBegin);
 		public static readonly Signature StructEnd = Allocate (DType.StructEnd);
 		public static readonly Signature ObjectPathSig = Allocate (DType.ObjectPath);
@@ -314,6 +315,7 @@ namespace DBus.Protocol
 					return 2;
 				case DType.Int32:
 				case DType.UInt32:
+				case DType.UnixFD:
 					return 4;
 				case DType.Int64:
 				case DType.UInt64:
@@ -617,6 +619,9 @@ namespace DBus.Protocol
 			if (type == typeof (string))
 				return DType.String;
 
+			if (type == typeof (UnixFD))
+				return DType.UnixFD;
+
 			if (type == typeof (ObjectPath))
 				return DType.ObjectPath;
 
@@ -678,6 +683,8 @@ namespace DBus.Protocol
 				return DType.Double;
 			else if (type == typeof (string))
 				return DType.String;
+			else if (type == typeof (UnixFD))
+				return DType.UnixFD;
 			else if (type == typeof (ObjectPath))
 				return DType.ObjectPath;
 			else if (type == typeof (Signature))
@@ -793,6 +800,8 @@ namespace DBus.Protocol
 				return typeof (double);
 			case DType.String:
 				return typeof (string);
+			case DType.UnixFD:
+				return typeof (UnixFD);
 			case DType.ObjectPath:
 				return typeof (ObjectPath);
 			case DType.Signature:
@@ -862,6 +871,9 @@ namespace DBus.Protocol
 			if (type == typeof (string))
 				return Signature.StringSig;
 
+			if (type == typeof (UnixFD))
+				return Signature.UnixFDSig;
+
 			if (type == typeof (object))
 				return Signature.VariantSig;
 
@@ -926,6 +938,7 @@ namespace DBus.Protocol
 				case DType.Single:
 				case DType.Double:
 				case DType.String:
+				case DType.UnixFD:
 				case DType.ObjectPath:
 				case DType.Signature:
 				case DType.Variant:

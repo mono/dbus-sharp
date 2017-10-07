@@ -81,6 +81,10 @@ namespace DBus
 
 		public void SendSignal (string iface, string member, string inSigStr, MessageWriter writer, Type retType, out Exception exception)
 		{
+			SendSignal (iface, member, inSigStr, writer, retType, null, out exception);
+		}
+		internal void SendSignal (string iface, string member, string inSigStr, MessageWriter writer, Type retType, DisposableList disposableList, out Exception exception)
+		{
 			exception = null;
 
 			Signature outSig = String.IsNullOrEmpty (inSigStr) ? Signature.Empty : new Signature (inSigStr);
@@ -100,6 +104,10 @@ namespace DBus
 		}
 
 		public MessageReader SendMethodCall (string iface, string member, string inSigStr, MessageWriter writer, Type retType, out Exception exception)
+		{
+			return SendMethodCall (iface, member, inSigStr, writer, retType, null, out exception);
+		}
+		public MessageReader SendMethodCall (string iface, string member, string inSigStr, MessageWriter writer, Type retType, DisposableList disposableList, out Exception exception)
 		{
 			if (string.IsNullOrEmpty (bus_name))
 				throw new ArgumentNullException ("bus_name");
@@ -137,7 +145,10 @@ namespace DBus
 			}
 #endif
 
-			Message retMsg = conn.SendWithReplyAndBlock (callMsg);
+			Message retMsg = conn.SendWithReplyAndBlock (callMsg, disposableList != null);
+			if (disposableList != null && retMsg.UnixFDArray != null)
+				foreach (var fd in retMsg.UnixFDArray.FDs)
+					disposableList.Add (fd);
 
 			MessageReader retVal = null;
 
@@ -163,6 +174,10 @@ namespace DBus
 		}
 
 		public void Invoke (MethodBase methodBase, string methodName, object[] inArgs, out object[] outArgs, out object retVal, out Exception exception)
+		{
+			Invoke (methodBase, methodName, inArgs, null, out outArgs, out retVal, out exception);
+		}
+		public void Invoke (MethodBase methodBase, string methodName, object[] inArgs, DisposableList disposableList, out object[] outArgs, out object retVal, out Exception exception)
 		{
 			outArgs = new object[0];
 			retVal = null;

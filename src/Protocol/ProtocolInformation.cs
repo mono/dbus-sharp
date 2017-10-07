@@ -64,6 +64,8 @@ namespace DBus.Protocol
 					return 8;
 				case DType.String:
 					return 4;
+				case DType.UnixFD:
+					return 4;
 				case DType.ObjectPath:
 					return 4;
 				case DType.Signature:

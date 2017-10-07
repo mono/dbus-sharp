@@ -13,12 +13,22 @@ namespace DBus.Protocol
 		Message reply;
 		ManualResetEvent waitHandle;
 		bool completedSync;
+		bool keepFDs;
 		
 		public event Action<Message> Completed;
 
-		public PendingCall (Connection conn)
+		public PendingCall (Connection conn) : this (conn, false) {}
+		public PendingCall (Connection conn, bool keepFDs)
 		{
 			this.conn = conn;
+			this.keepFDs = keepFDs;
+		}
+
+		internal bool KeepFDs
+		{
+			get {
+				return keepFDs;
+			}
 		}
 
 		public Message Reply {

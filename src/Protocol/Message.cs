@@ -8,11 +8,12 @@ using System.IO;
 
 namespace DBus.Protocol
 {
-	public class Message
+	public class Message : IDisposable
 	{
 		Header header = new Header ();
 		Connection connection;
 		byte[] body;
+		UnixFDArray fdArray;
 
 		public Message ()
 		{
@@ -24,9 +25,15 @@ namespace DBus.Protocol
 
 		public static Message FromReceivedBytes (Connection connection, byte[] header, byte[] body)
 		{
+			return FromReceivedBytes (connection, header, body, null);
+		}
+		
+		public static Message FromReceivedBytes (Connection connection, byte[] header, byte[] body, UnixFDArray fdArray)
+		{
 			Message message = new Message ();
 			message.connection = connection;
 			message.body = body;
+			message.fdArray = fdArray;
 			message.SetHeaderData (header);
 
 			return message;
@@ -35,6 +42,12 @@ namespace DBus.Protocol
 		public byte[] Body {
 			get {
 				return body;
+			}
+		}
+
+		public UnixFDArray UnixFDArray {
+			get {
+				return fdArray;
 			}
 		}
 
@@ -82,6 +95,13 @@ namespace DBus.Protocol
 		{
 			body = writer.ToArray ();
 			header.Length = (uint)body.Length;
+			if (writer.fdArray.FDs.Count != 0) {
+				header[FieldCode.UnixFDs] = (uint) writer.fdArray.FDs.Count;
+				if (fdArray == null)
+					fdArray = new UnixFDArray ();
+				foreach (var fd in writer.fdArray.FDs)
+					fdArray.FDs.Add (fd);
+			}
 		}
 
 		public void HandleHeader (Header headerIn)
@@ -99,6 +119,12 @@ namespace DBus.Protocol
 			MessageWriter writer = new MessageWriter (header.Endianness);
 			header.WriteHeaderToMessage (writer);
 			return writer.ToArray ();
+		}
+
+		public void Dispose ()
+		{
+			if (UnixFDArray != null)
+				UnixFDArray.Dispose ();
 		}
 	}
 }
