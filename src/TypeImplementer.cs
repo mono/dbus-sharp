@@ -67,12 +67,11 @@ namespace DBus
 
 			TypeBuilder typeB = modB.DefineType (proxyName, TypeAttributes.Class | TypeAttributes.Public, parentType);
 
-			string interfaceName = null;
 			if (declType.IsInterface)
-				Implement (typeB, declType, interfaceName = Mapper.GetInterfaceName (declType));
+				Implement (typeB, declType, Mapper.GetInterfaceName (declType));
 
 			foreach (Type iface in declType.GetInterfaces ())
-				Implement (typeB, iface, interfaceName == null ? Mapper.GetInterfaceName (iface) : interfaceName);
+				Implement (typeB, iface, Mapper.GetInterfaceName (iface));
 
 			retT = typeB.CreateType ();
 
