@@ -173,7 +173,7 @@ namespace DBus.Tests
 			Array.Copy (BitConverter.GetBytes ((long)1), 0, data, 0, 8);
 			Array.Copy (BitConverter.GetBytes (ulong.MaxValue), 0, data, 8, 8);
 			Array.Copy (BitConverter.GetBytes ((double)3.3), 0, data, 16, 8);
-			// Swap value to simulate other endianess
+			// Swap value to simulate other endianness
 			for (int i = 0; i < data.Length; i += 8) {
 				for (int j = 0; j < 4; j++) {
 					data[i + j] = (byte)(data[i + j] ^ data[i + 7 - j]);
