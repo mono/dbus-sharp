@@ -341,14 +341,12 @@ namespace DBus.Protocol
 
 			Type type = val.GetType ();
 			
-			//TODO: Take a look at TypeImplementer
-			// and understand why does this happens
-			if (type.IsArray) {
-				Write(type, val);
-			}
-			else{
+			// TODO: workaround issue with array being written as variant
+			// See PR for context: https://github.com/mono/dbus-sharp/pull/58
+			if (type.IsArray)
+				Write (type, val);
+			else
 				WriteVariant (type, val);
-			}
 		}
 
 		public void WriteVariant (Type type, object val)
