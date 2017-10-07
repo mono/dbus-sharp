@@ -228,10 +228,3 @@ namespace DBus.Unix
 		}
 	}
 }
-
-// vim: noexpandtab
-// Local Variables:
-// tab-width: 4
-// c-basic-offset: 4
-// indent-tabs-mode: t
-// End:
