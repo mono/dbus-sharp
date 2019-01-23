@@ -25,7 +25,7 @@ namespace DBus
 		{
 			get
 			{
-				return ErrorName + ": " + ErrorMessage;
+				return ErrorName + ": " + ErrorMessage + Environment.NewLine + this.StackTrace;
 			}
 		}
 

@@ -14,6 +14,7 @@ namespace DBus.Transports
 	abstract class Transport
 	{
 		readonly object writeLock = new object ();
+		readonly object readLock = new object ();
 
 		[ThreadStatic]
 		static byte[] readBuffer;
@@ -154,12 +155,26 @@ namespace DBus.Transports
 				WakeUp (this, EventArgs.Empty);
 		}
 
+
+		internal virtual void WriteMessage(Message msg)
+		{
+			lock (writeLock)
+			{
+				msg.Header.GetHeaderDataToStream (stream);
+				if (msg.Body != null && msg.Body.Length != 0)
+					stream.Write (msg.Body, 0, msg.Body.Length);
+				stream.Flush ();
+			}
+		}
+
 		internal Message ReadMessage ()
 		{
 			Message msg;
 
 			try {
-				msg = ReadMessageReal ();
+				lock (readLock)
+					msg = ReadMessageReal ();
+
 				if (msg == null) {
 					if (connection.IsConnected) {
 						if (ProtocolInformation.Verbose)
@@ -173,30 +188,17 @@ namespace DBus.Transports
 				connection.IsConnected = false;
 				msg = null;
 			}
-         
+
 			if (connection != null && connection.Monitors != null)
 				connection.Monitors (msg);
 
 			return msg;
 		}
 
-		internal virtual int Read (byte[] buffer, int offset, int count, UnixFDArray fdArray)
-		{
-			int read = 0;
-			while (read < count) {
-				int nread = stream.Read (buffer, offset + read, count - read);
-				if (nread == 0)
-					break;
-				read += nread;
-			}
-
-			if (read > count)
-				throw new Exception ();
-
-			return read;
-		}
-
-		Message ReadMessageReal ()
+		/// <summary>
+		/// Thread unsafe! Safely called from <see cref="ReadMessage"/>.
+		/// </summary>
+		private Message ReadMessageReal ()
 		{
 			byte[] header = null;
 			byte[] body = null;
@@ -266,18 +268,24 @@ namespace DBus.Transports
 			}
 
 			Message msg = Message.FromReceivedBytes (Connection, header, body, fdArray);
-
 			return msg;
 		}
 
-		internal virtual void WriteMessage (Message msg)
+		internal virtual int Read (byte[] buffer, int offset, int count, UnixFDArray fdArray)
 		{
-			lock (writeLock) {
-				msg.Header.GetHeaderDataToStream (stream);
-				if (msg.Body != null && msg.Body.Length != 0)
-					stream.Write (msg.Body, 0, msg.Body.Length);
-				stream.Flush ();
+			int read = 0;
+			while (read < count)
+			{
+				int nread = stream.Read (buffer, offset + read, count - read);
+				if (nread == 0)
+					break;
+				read += nread;
 			}
+
+			if (read > count)
+				throw new Exception ();
+
+			return read;
 		}
 
 		// Returns true if then transport supports unix FDs, even when the

@@ -59,11 +59,13 @@ namespace DBus
 				throw new ArgumentNullException ("address");
 
 			Bus bus;
-			if (buses.TryGetValue (address, out bus))
-				return bus;
+			lock (buses) {
+				if (buses.TryGetValue (address, out bus))
+					return bus;
 
-			bus = new Bus (address);
-			buses[address] = bus;
+				bus = new Bus (address);
+				buses[address] = bus;
+			}
 
 			return bus;
 		}
