@@ -7,6 +7,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
 
 using org.freedesktop.DBus;
 
@@ -128,17 +129,22 @@ namespace DBus
 				replyMsg.Signature = outSig;
 			} else {
 				// BusException allows precisely formatted Error messages.
-				BusException busException = raisedException as BusException;
-				if (busException != null)
+				if (raisedException is BusException busException)
 					replyMsg = method_call.CreateError (busException.ErrorName, busException.ErrorMessage);
 				else if (raisedException is ArgumentException && raisedException.TargetSite.Name == mi.Name) {
 					// Name match trick above is a hack since we don't have the resolved MethodInfo.
-					ArgumentException argException = (ArgumentException)raisedException;
-					using (System.IO.StringReader sr = new System.IO.StringReader (argException.Message)) {
+					var argException = (ArgumentException)raisedException;
+					using (var sr = new System.IO.StringReader (argException.Message)) {
 						replyMsg = method_call.CreateError ("org.freedesktop.DBus.Error.InvalidArgs", sr.ReadLine ());
 					}
-				} else
-					replyMsg = method_call.CreateError (Mapper.GetInterfaceName (raisedException.GetType ()), raisedException.Message);
+				} else {
+					var errorMessage = new StringBuilder ();
+					errorMessage.AppendLine (raisedException.Message);
+					errorMessage.AppendLine ("-- Original remote exception stack trace --");
+					errorMessage.AppendLine (raisedException.StackTrace);
+					errorMessage.AppendLine ("-- (done) --");
+					replyMsg = method_call.CreateError (Mapper.GetInterfaceName (raisedException.GetType ()), errorMessage.ToString ().Trim ());
+				}
 			}
 
 			if (method_call.Sender != null)
