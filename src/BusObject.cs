@@ -173,6 +173,29 @@ namespace DBus
 			return retVal;
 		}
 
+		public object SendPropertyGet (string iface, string property)
+		{
+			Exception exception;
+			MessageWriter writer = new MessageWriter ();
+			writer.Write (iface);
+			writer.Write (property);
+
+			MessageReader reader = SendMethodCall ("org.freedesktop.DBus.Properties", "Get", "ss", writer, typeof(object), out exception);
+
+			return reader.ReadValue ();
+		}
+
+		public void SendPropertySet (string iface, string property, object value)
+		{
+			Exception exception;
+			MessageWriter writer = new MessageWriter ();
+			writer.Write (iface);
+			writer.Write (property);
+			writer.Write (typeof(object), value);
+
+			SendMethodCall ("org.freedesktop.DBus.Properties", "Set", "ssv", writer, typeof(void), out exception);
+		}
+
 		public void Invoke (MethodBase methodBase, string methodName, object[] inArgs, out object[] outArgs, out object retVal, out Exception exception)
 		{
 			Invoke (methodBase, methodName, inArgs, null, out outArgs, out retVal, out exception);

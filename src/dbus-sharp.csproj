@@ -54,6 +54,7 @@
     <Compile Include="Mapper.cs" />
     <Compile Include="OSHelpers.cs" />
     <Compile Include="TypeImplementer.cs" />
+    <Compile Include="ReflectionExtensions.cs" />
     <Compile Include="ArgDirection.cs" />
     <Compile Include="ObjectPath.cs" />
     <Compile Include="BusException.cs" />
