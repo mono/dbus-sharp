@@ -3,9 +3,11 @@
 // See COPYING for details
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Reflection;
 
 namespace DBus
@@ -37,23 +39,24 @@ namespace DBus
 
 		Dictionary<uint,PendingCall> pendingCalls = new Dictionary<uint,PendingCall> ();
 		Queue<Message> inbound = new Queue<Message> ();
-		Dictionary<ObjectPath,BusObject> registeredObjects = new Dictionary<ObjectPath,BusObject> ();
+		ConcurrentDictionary<ObjectPath,BusObject> registeredObjects = new ConcurrentDictionary<ObjectPath,BusObject> ();
+		private readonly ReadMessageTask readMessageTask;
 
 		public delegate void MonitorEventHandler (Message msg);
 		public MonitorEventHandler Monitors; // subscribe yourself to this list of observers if you want to get notified about each incoming message
 
 		protected Connection ()
 		{
-
+			readMessageTask = new ReadMessageTask (this);
 		}
 
-		internal Connection (Transport transport)
+		internal Connection (Transport transport) : this ()
 		{
 			this.transport = transport;
 			transport.Connection = this;
 		}
 
-		internal Connection (string address)
+		internal Connection (string address) : this ()
 		{
 			OpenPrivate (address);
 			Authenticate ();
@@ -183,11 +186,12 @@ namespace DBus
 
 		internal Message SendWithReplyAndBlock (Message msg, bool keepFDs)
 		{
-			PendingCall pending = SendWithReply (msg, keepFDs);
-			return pending.Reply;
+			using (PendingCall pending = SendWithPendingReply (msg, keepFDs)) {
+				return pending.Reply;
+			}
 		}
 
-		internal PendingCall SendWithReply (Message msg, bool keepFDs)
+		internal PendingCall SendWithPendingReply (Message msg, bool keepFDs)
 		{
 			msg.ReplyExpected = true;
 
@@ -215,27 +219,23 @@ namespace DBus
 			return msg.Header.Serial;
 		}
 
-		//temporary hack
-		internal void DispatchSignals ()
-		{
-			lock (inbound) {
-				while (inbound.Count != 0) {
-					Message msg = inbound.Dequeue ();
-					try {
-						HandleSignal (msg);
-					} finally {
-						msg.Dispose ();
-					}
-				}
-			}
-		}
-
 		public void Iterate ()
 		{
-			Message msg = transport.ReadMessage ();
+			Iterate (new CancellationToken (false));
+		}
 
-			HandleMessage (msg);
-			DispatchSignals ();
+		public void Iterate (CancellationToken stopWaitToken)
+		{
+			if (TryGetStoredSignalMessage (out Message inboundMsg)) {
+				try {
+					HandleSignal (inboundMsg);
+				} finally {
+					inboundMsg.Dispose ();
+				}
+			} else {
+				var msg = readMessageTask.MakeSureTaskRunAndWait (stopWaitToken);
+				HandleMessage (msg);
+			}
 		}
 
 		internal virtual void HandleMessage (Message msg)
@@ -251,21 +251,19 @@ namespace DBus
 			try {
 
 				//TODO: Restrict messages to Local ObjectPath?
-
 				{
-					object field_value = msg.Header[FieldCode.ReplySerial];
+					object field_value = msg.Header [FieldCode.ReplySerial];
 					if (field_value != null) {
 						uint reply_serial = (uint)field_value;
-						PendingCall pending;
 
 						lock (pendingCalls) {
+							PendingCall pending;
 							if (pendingCalls.TryGetValue (reply_serial, out pending)) {
-								if (pendingCalls.Remove (reply_serial)) {
-									pending.Reply = msg;
-									if (pending.KeepFDs)
-										cleanupFDs = false; // caller is responsible for closing FDs
-								}
-
+								if (!pendingCalls.Remove (reply_serial))
+									return;
+								pending.Reply = msg;
+								if (pending.KeepFDs)
+									cleanupFDs = false; // caller is responsible for closing FDs
 								return;
 							}
 						}
@@ -285,8 +283,7 @@ namespace DBus
 						break;
 					case MessageType.Signal:
 						//HandleSignal (msg);
-						lock (inbound)
-							inbound.Enqueue (msg);
+						StoreInboundSignalMessage (msg); //temporary hack
 						cleanupFDs = false; // FDs are closed after signal is handled
 						break;
 					case MessageType.Error:
@@ -391,14 +388,15 @@ namespace DBus
 				//this is messy and inefficient
 				List<string> linkNodes = new List<string> ();
 				int depth = method_call.Path.Decomposed.Length;
-				foreach (ObjectPath pth in registeredObjects.Keys) {
-					if (pth.Value == (method_call.Path.Value)) {
-						ExportObject exo = (ExportObject)registeredObjects[pth];
+				foreach(var objKeyValuePair in registeredObjects) {
+					ObjectPath pth = objKeyValuePair.Key;
+					ExportObject exo = (ExportObject) objKeyValuePair.Value;
+					if (pth.Value == method_call.Path.Value) {
 						exo.WriteIntrospect (intro);
 					} else {
-						for (ObjectPath cur = pth ; cur != null ; cur = cur.Parent) {
+						for (ObjectPath cur = pth; cur != null; cur = cur.Parent) {
 							if (cur.Value == method_call.Path.Value) {
-								string linkNode = pth.Decomposed[depth];
+								string linkNode = pth.Decomposed [depth];
 								if (!linkNodes.Contains (linkNode)) {
 									intro.WriteNode (linkNode);
 									linkNodes.Add (linkNode);
@@ -415,9 +413,8 @@ namespace DBus
 				return;
 			}
 
-			BusObject bo;
-			if (registeredObjects.TryGetValue (method_call.Path, out bo)) {
-				ExportObject eo = (ExportObject)bo;
+			if (registeredObjects.TryGetValue(method_call.Path, out BusObject bo)) {
+				ExportObject eo = (ExportObject) bo;
 				eo.HandleMethodCall (method_call);
 			} else {
 				MaybeSendUnknownMethodError (method_call);
@@ -464,14 +461,10 @@ namespace DBus
 
 		public object Unregister (ObjectPath path)
 		{
-			BusObject bo;
-
-			if (!registeredObjects.TryGetValue (path, out bo))
+			if (!registeredObjects.TryRemove (path, out BusObject bo))
 				throw new Exception ("Cannot unregister " + path + " as it isn't registered");
 
-			registeredObjects.Remove (path);
-
-			ExportObject eo = (ExportObject)bo;
+			ExportObject eo = (ExportObject) bo;
 			eo.Registered = false;
 
 			return eo.Object;
@@ -486,6 +479,25 @@ namespace DBus
 		{
 		}
 
+		private void StoreInboundSignalMessage (Message msg)
+		{
+			lock (inbound) {
+				inbound.Enqueue (msg);
+			}
+		}
+
+		private bool  TryGetStoredSignalMessage (out Message msg)
+		{
+			msg = null;
+			lock (inbound) {
+				if (inbound.Count != 0) {
+					msg = inbound.Dequeue ();
+					return true;
+				}
+			}
+			return false;
+		}
+
 		static UUID ReadMachineId (string fname)
 		{
 			byte[] data = File.ReadAllBytes (fname);
@@ -493,6 +505,32 @@ namespace DBus
 				return UUID.Zero;
 
 			return UUID.Parse (System.Text.Encoding.ASCII.GetString (data, 0, 32));
+		}
+	
+		private class ReadMessageTask
+		{
+			private readonly Connection ownerConnection;
+			private Task<Message> task = null;
+			private object taskLock = new object ();
+
+			public ReadMessageTask (Connection connection)
+			{
+				ownerConnection = connection;
+			}
+
+			public Message MakeSureTaskRunAndWait(CancellationToken stopWaitToken)
+			{
+				Task<Message> catchedTask = null;
+
+				lock (taskLock) {
+					if (task == null || task.IsCompleted) {
+						task = Task<Message>.Run (() => ownerConnection.transport.ReadMessage ());
+					}
+					catchedTask = task;
+				}
+				catchedTask.Wait (stopWaitToken);
+				return catchedTask.Result;
+			}
 		}
 	}
 }
