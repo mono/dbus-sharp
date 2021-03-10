@@ -55,18 +55,17 @@ all: $(TARGET)
 
 $(TARGET): $(CSFILES) AssemblyInfo.cs
 	$(XBUILD_Q) dbus-sharp.csproj
+	sn -q -R $(TARGET) $(top_srcdir)/dbus-sharp.snk
 
 install-data-local: $(TARGET)
-	@if test -n '$(TARGET)'; then                       \
-          echo "$(GACUTIL) /i $(TARGET) /package $(PACKAGE)-$(API_VERSION) /f /gacdir $(libdir) /root $(DESTDIR)$(libdir)";    \
-          $(GACUTIL) /i $(TARGET) /package $(PACKAGE)-$(API_VERSION) /f /gacdir $(libdir) /root $(DESTDIR)$(libdir) || exit 1; \
-        fi
+	@if test -n '$(TARGET)'; then \
+		( set -x; $(GACUTIL) /i $(TARGET) /package $(PACKAGE)-$(API_VERSION) /f /gacdir $(libdir) /root $(DESTDIR)$(libdir) ) || exit 1; \
+	fi
 
 uninstall-local:
-	@if test -n '$(TARGET)'; then                       \
-          echo "$(GACUTIL) /u $(ASSEMBLY) /package $(PACKAGE)-$(API_VERSION) /gacdir $(libdir) /root $(DESTDIR)$(libdir)";  \
-          $(GACUTIL) /u $(ASSEMBLY) /package $(PACKAGE)-$(API_VERSION) /gacdir $(libdir) /root $(DESTDIR)$(libdir) || exit 1;   \
-        fi
+	@if test -n '$(TARGET)'; then \
+		( set -x; $(GACUTIL) /u $(ASSEMBLY) /package $(PACKAGE)-$(API_VERSION) /gacdir $(libdir) /root $(DESTDIR)$(libdir) ) || exit 1; \
+	fi
 
 .PHONY: $(TARGET)
 
