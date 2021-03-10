@@ -33,7 +33,8 @@ namespace DBus.Protocol
 		public Message CreateError (string errorName, string errorMessage)
 		{
 			var message = Message;
-			MessageContainer error = new MessageContainer {
+			
+			var error = new MessageContainer {
 				Type = MessageType.Error,
 				ErrorName = errorName,
 				ReplySerial = message.Header.Serial,
@@ -41,7 +42,7 @@ namespace DBus.Protocol
 				Destination = Sender
 			};
 
-			MessageWriter writer = new MessageWriter (message.Header.Endianness);
+			var writer = new MessageWriter (message.Header.Endianness);
 			writer.Write (errorMessage);
 			message = error.Message;
 			message.AttachBodyTo (writer);
